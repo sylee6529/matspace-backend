@@ -6,7 +6,7 @@ import { ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 
 @ApiTags('test API')
-@Controller()
+@Controller('cats')
 export class CatController {
     constructor(private readonly catsService: CatService) {}
 
