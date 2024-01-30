@@ -5,7 +5,8 @@ import { ClassSerializerInterceptor } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
+  app.enableCors();
+  
   const config = new DocumentBuilder()
     .setTitle('맛집 취향 분석 API Docs')
     .setDescription('천하무적팀 Swagger API 명세서')
