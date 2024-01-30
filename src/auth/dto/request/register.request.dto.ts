@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsEmail, IsNotEmpty, MaxLength, Min, MinLength } from "class-validator";
+import { Types } from "mongoose";
 
 export class RegisterRequestDto {
   @IsNotEmpty()
@@ -18,4 +19,7 @@ export class RegisterRequestDto {
   @MaxLength(12)
   @ApiProperty({ example: '김김김', description: '유저이름' })
   username: string;
+
+  @ApiProperty({ example: [], description: '친구 목록' })
+  friends: Types.ObjectId[];
 }
