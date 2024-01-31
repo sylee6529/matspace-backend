@@ -7,7 +7,7 @@ import { hash, isHashValid } from './../util/bcrypt.encoder';
 import { JwtService } from '@nestjs/jwt';
 import { LoginRequestDto } from './dto/request/login.request.dto';
 import { ConfigService } from '@nestjs/config';
-import { UserDetails } from './dto/response/user.response.dto';
+import { UserResponseDto } from './dto/response/user.response.dto';
 @Injectable()
 export class AuthService {
     constructor(
@@ -16,14 +16,14 @@ export class AuthService {
         private readonly configService: ConfigService,
         ) {}
 
-    async create(registerRequestDto: RegisterRequestDto): Promise<UserDetails> {
+    async create(registerRequestDto: RegisterRequestDto): Promise<{ userDetails: UserResponseDto }> {
         try {
             const { email, username, password, friends } = registerRequestDto;
             const hashedPassword = await hash(password);
             const newUser = new this.userModel({ email, username, password: hashedPassword, friends });
             await newUser.save();
             const accessToken = this.jwtService.sign({ sub: newUser._id.toString() });
-            return new UserDetails(newUser._id.toString(), newUser.username, accessToken, newUser.email);
+            return { userDetails: new UserResponseDto(newUser._id.toString(), newUser.username, accessToken, newUser.email) };
         } catch (error) {
             if(error.message.includes('E11000 duplicate key error index')) {
                 throw new ConflictException('이미 존재하는 email 입니다.');
@@ -34,13 +34,13 @@ export class AuthService {
         }
     }
 
-    async login(loginRequestDto: LoginRequestDto): Promise<{ userResponseDto: UserDetails }> {
+    async login(loginRequestDto: LoginRequestDto): Promise<{ userDetails: UserResponseDto }> {
         try {
             const { email, password } = loginRequestDto;
             const user = await this.userModel.findOne({ email }).exec();
             if (user && (await isHashValid(password, user.password))) {
                 const accessToken = this.jwtService.sign({ sub: user._id.toString() });
-                return { userResponseDto: new UserDetails(user._id.toString(), user.username, accessToken, user.email) };
+                return { userDetails: new UserResponseDto(user._id.toString(), user.username, accessToken, user.email) };
             } else {
                 throw new UnauthorizedException('login failed');
             }
