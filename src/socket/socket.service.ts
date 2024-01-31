@@ -138,9 +138,11 @@ export class SocketService {
             const receiverList = this.getActiveConnections(userId);
         
             receiverList.forEach((receiverSocketId) => {
-                this.server.to(receiverSocketId).emit("friends-invitations", {
-                pendingInvitations: pendingInvitations ? pendingInvitations : [],
-              });
+                this.server.on("friends-invitations", (socket) => {
+                    socket.to(receiverSocketId).emit("friends-invitations", {
+                        pendingInvitations: pendingInvitations ? pendingInvitations : [],
+                    });
+                });
             });
           } catch (err) {
             console.log(err);
@@ -164,9 +166,14 @@ export class SocketService {
                     });
 
                     receiverList.forEach((receiverSocketId) => {
-                        this.server.to(receiverSocketId).emit("friends-list", {
-                            friends: friendsList ? friendsList : [],
-                        });
+                        this.server.on("friends-list", (socket) =>{
+                                socket.to(receiverSocketId).emit("friends-list", {
+                                    friends: friendsList ? friendsList : [],
+                                });
+                            });
+                        // to(receiverSocketId).emit("friends-list", {
+                        //     friends: friendsList ? friendsList : [],
+                        // });
                     });
                 }
             }

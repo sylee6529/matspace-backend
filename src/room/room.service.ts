@@ -9,6 +9,7 @@ import { JwtStrategy } from 'src/auth/provider/jwt.strategy';
 import { UserSocket } from 'src/socket/interface/user.handshake';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from 'src/auth/auth.service';
+import { SocketGateway } from 'src/socket/socket.gateway';
 
 @Injectable()
 export class RoomService {
@@ -36,11 +37,17 @@ export class RoomService {
     }
 
     @SubscribeMessage('room-join')
-    handleRoomJoin(socket: Socket, data: any): void {
+    async handleRoomJoin(socket: Socket, data: any): Promise<void> {
         const { roomId } = data;
-        const userSocket = socket as UserSocket;
+        // const userSocket = socket as UserSocket;
+
+        const token = socket.handshake.auth?.token;
+        // console.log(token)
+        const userId = this.jwtService.verify(token);
+        const user = await this.authService.validate(userId);
+
         const participantDetails = {
-            userId: userSocket.user._id.toString(),
+            userId: user._id.toString(),
             socketId: socket.id,
         };
 

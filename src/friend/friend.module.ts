@@ -6,13 +6,16 @@ import { FriendInvitationSchema } from './schema/friend.invitation.schema';
 import { AuthModule } from 'src/auth/auth.module';
 import { SocketModule } from 'src/socket/socket.module';
 import { RoomModule } from 'src/room/room.module';
+import { SocketGateway } from 'src/socket/socket.gateway';
+import { RoomService } from 'src/room/room.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [ 
     forwardRef(() => RoomModule),
     SocketModule,
     AuthModule,
-    MongooseModule.forFeature([
+        MongooseModule.forFeature([
       { 
         name: 'FriendInvitation', 
         schema: FriendInvitationSchema
