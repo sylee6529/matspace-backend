@@ -7,24 +7,22 @@ import { GetUserId } from 'src/util/decorator/get-user.decorator';
 @Controller('api/friends/requests')
 export class FriendController {
     constructor(
-        private readonly friendnService: FriendService,
+        private readonly friendService: FriendService,
       ) {}
-    
-      @UseGuards(AuthGuard('jwt'))
+
       @Post('')
       invite(@GetUserId() userId, @Body() createFriendInvitationDto: CreateFriendInvitationDto): Promise<string> {
-        return this.friendnService.invite(userId, createFriendInvitationDto);
+        console.log(userId)
+        return this.friendService.invite(userId, createFriendInvitationDto);
       }
 
-      @UseGuards(AuthGuard('jwt'))
       @Post('accept')
       accept(@GetUserId() userId, @Body() createFriendInvitationDto: CreateFriendInvitationDto): Promise<string> {
-        return this.friendnService.accept(userId, createFriendInvitationDto);
+        return this.friendService.accept(userId, createFriendInvitationDto);
       }
 
-      @UseGuards(AuthGuard('jwt'))
       @Post('reject')
       reject(@GetUserId() userId, @Body() createFriendInvitationDto: CreateFriendInvitationDto): Promise<string> {
-        return this.friendnService.reject(userId, createFriendInvitationDto);
+        return this.friendService.reject(userId, createFriendInvitationDto);
       }
 }

@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FriendInvitation, FriendInvitationDocument } from './schema/friend.invitation.schema';
 import { Model } from 'mongoose';
@@ -6,6 +6,7 @@ import { User, userDocument } from 'src/auth/user.schema';
 import { CreateFriendInvitationDto } from './dto/create.friend.invitation.dto';
 import { CatService } from 'src/cat/cat.service';
 import { SocketService } from 'src/socket/socket.service';
+import { SocketGateway } from 'src/socket/socket.gateway';
 
 @Injectable()
 export class FriendService {
@@ -21,11 +22,14 @@ export class FriendService {
         if (userId === targetEmailAddress) {
           throw new Error("자기 자신은 초대할 수는 없습니다.");
         }
-    
+        console.log("1", targetEmailAddress);
+
         const targetUser = await this.userModel.findOne({
           email: targetEmailAddress.toLowerCase(),
         });
-    
+        
+        console.log("2", targetUser);
+
         if (!targetUser) {
           throw new Error(`${targetEmailAddress}는 존재하지 않는 유저입니다.`);
         }
@@ -53,7 +57,7 @@ export class FriendService {
         });
     
         this.socketService.updateFriendsPendingInvitations(targetUser._id.toString());
-    
+        
         return "초대 요청이 보내졌습니다.";
       }
 
