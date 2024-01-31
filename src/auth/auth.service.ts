@@ -8,8 +8,6 @@ import { JwtService } from '@nestjs/jwt';
 import { UserResponseDto } from './dto/response/user.response.dto';
 import { LoginRequestDto } from './dto/request/login.request.dto';
 import { ConfigService } from '@nestjs/config';
-import { IUser } from './interface/user.interface';
-
 @Injectable()
 export class AuthService {
     constructor(
