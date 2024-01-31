@@ -4,14 +4,14 @@ import { CreateFriendInvitationDto } from './dto/create.friend.invitation.dto';
 import { FriendService } from './friend.service';
 import { GetUserId } from 'src/util/decorator/get-user.decorator';
 
-@Controller('api/friends')
+@Controller('api/friends/requests')
 export class FriendController {
     constructor(
         private readonly friendnService: FriendService,
       ) {}
     
       @UseGuards(AuthGuard('jwt'))
-      @Post('invite')
+      @Post('')
       invite(@GetUserId() userId, @Body() createFriendInvitationDto: CreateFriendInvitationDto): Promise<string> {
         return this.friendnService.invite(userId, createFriendInvitationDto);
       }
