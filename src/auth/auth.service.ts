@@ -23,7 +23,7 @@ export class AuthService {
             const newUser = new this.userModel({ email, username, password: hashedPassword, friends });
             await newUser.save();
             const accessToken = this.jwtService.sign({ sub: newUser._id.toString() });
-            return new UserResponseDto(accessToken, newUser.username);
+            return new UserResponseDto(newUser._id.toString(), newUser.username, accessToken, newUser.email);
         } catch (error) {
             if(error.message.includes('E11000 duplicate key error index')) {
                 throw new ConflictException('이미 존재하는 email 입니다.');
@@ -40,7 +40,7 @@ export class AuthService {
             const user = await this.userModel.findOne({ email }).exec();
             if (user && (await isHashValid(password, user.password))) {
                 const accessToken = this.jwtService.sign({ sub: user._id.toString() });
-                return { userResponseDto: new UserResponseDto(accessToken, user.username) };
+                return { userResponseDto: new UserResponseDto(user._id.toString(), user.username, accessToken, user.email) };
             } else {
                 throw new UnauthorizedException('login failed');
             }
