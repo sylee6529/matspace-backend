@@ -4,7 +4,7 @@ import { User } from "src/auth/user.schema";
 import { IsEmail } from 'class-validator';
 
 
-export class UserDetails {
+export class UserResponseDto {
     private _id: string;
     private username: string;
     private token: string;

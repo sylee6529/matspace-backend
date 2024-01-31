@@ -2,7 +2,7 @@ import { Body, ClassSerializerInterceptor, Controller, Post, Res, UseGuards, Use
 import { ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterRequestDto } from './dto/request/register.request.dto';
-import { UserDetails } from './dto/response/user.response.dto';
+import { UserResponseDto } from './dto/response/user.response.dto';
 import { LoginRequestDto } from './dto/request/login.request.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { GetUserId } from 'src/util/decorator/get-user.decorator';
@@ -17,7 +17,7 @@ export class AuthController {
     @ApiOperation({ summary: '로그인', description: '일반 로그인입니다.' })
     @ApiCreatedResponse({ description: '로그인 성공' })
     async create(@Body(ValidationPipe) loginRequestDto: LoginRequestDto): Promise<{ 
-        userResponseDto: UserDetails
+        userDetails: UserResponseDto
     }> {
         return this.authService.login(loginRequestDto);
     }
@@ -25,7 +25,7 @@ export class AuthController {
     @Post("/register")
     @ApiOperation({ summary: '회원가입', description: '회원가입입니다.' })
     @ApiCreatedResponse({ description: '회원가입 성공' })
-    async register(@Body(ValidationPipe) registerRequestDto: RegisterRequestDto): Promise<UserDetails> {
+    async register(@Body(ValidationPipe) registerRequestDto: RegisterRequestDto): Promise<{userDetails: UserResponseDto}> {
         return this.authService.create(registerRequestDto);
     }
 }
