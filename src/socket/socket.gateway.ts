@@ -2,15 +2,15 @@ import { OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, SubscribeMessa
 import { SocketService } from './socket.service';
 import { Logger, OnModuleInit, UseGuards } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
-import { RoomService } from './../room/room.service';
 import { interval } from 'rxjs';
 import { Interval } from '@nestjs/schedule';
 import { User } from 'src/auth/user.schema';
 import { AuthService } from 'src/auth/auth.service';
 import { JwtService } from '@nestjs/jwt';
+import { RoomService } from 'src/room/room.service';
 import { UserSocket } from './interface/user.handshake';
 
-@WebSocketGateway({ cors: { origin: '*', methods: ['GET', 'POST'], namespace: 'vcall'} })
+@WebSocketGateway(8080, { cors: { origin: '*' }})
 export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {
   
   @WebSocketServer()
@@ -60,11 +60,8 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
           userId,
         );
         
-  
-        // update pending friends invitations list
         this.socketService.updateFriendsPendingInvitations(userId);
   
-        // update friends list
         this.socketService.updateFriends(userId);
         console.log('user connected: ${client.id}');
       }
