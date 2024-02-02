@@ -13,14 +13,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     imports: [forwardRef(() => FriendModule), 
         AuthModule, 
         forwardRef(() => RoomModule),
-        JwtModule.registerAsync({
-            imports: [ConfigModule],
-            inject: [ConfigService],
-            useFactory: async (ConfigService: ConfigService) => ({
-              secret: ConfigService.get<string>('JWT_SECRET'),
-              signOptions: { expiresIn: '1d' },
-            }),
-          }),
     ],
     providers: [SocketService, SocketGateway, RoomService],
     exports: [SocketService, SocketGateway],
