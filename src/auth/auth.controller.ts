@@ -17,7 +17,7 @@ export class AuthController {
     @ApiOperation({ summary: '로그인', description: '일반 로그인입니다.' })
     @ApiCreatedResponse({ description: '로그인 성공' })
     async create(@Body(ValidationPipe) loginRequestDto: LoginRequestDto): Promise<{ 
-        userResponseDto: UserResponseDto
+        userDetails: UserResponseDto
     }> {
         return this.authService.login(loginRequestDto);
     }
@@ -25,7 +25,7 @@ export class AuthController {
     @Post("/register")
     @ApiOperation({ summary: '회원가입', description: '회원가입입니다.' })
     @ApiCreatedResponse({ description: '회원가입 성공' })
-    async register(@Body(ValidationPipe) registerRequestDto: RegisterRequestDto): Promise<UserResponseDto> {
+    async register(@Body(ValidationPipe) registerRequestDto: RegisterRequestDto): Promise<{userDetails: UserResponseDto}> {
         return this.authService.create(registerRequestDto);
     }
 }

@@ -5,10 +5,17 @@ import { CatModule } from './cat/cat.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
+import { FriendService } from './friend/friend.service';
+import { FriendModule } from './friend/friend.module';
+import { SocketModule } from './socket/socket.module';
+import { RoomController } from './room/room.controller';
+import { RoomModule } from './room/room.module';
+import { FriendController } from './friend/friend.controller';
+import { AuthService } from './auth/auth.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [CatModule,
-    AuthModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }
@@ -19,8 +26,11 @@ import { AuthModule } from './auth/auth.module';
     }),
     inject: [ConfigService],
   }),
-  AuthModule],
-  controllers: [AppController],
-  providers: [AppService],
+  AuthModule,
+  FriendModule,
+  SocketModule,
+  RoomModule],
+  controllers: [AppController, RoomController, FriendController],
+  providers: [AppService, FriendService, AuthService],
 })
 export class AppModule {}
