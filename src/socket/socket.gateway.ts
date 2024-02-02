@@ -48,25 +48,20 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
   async handleConnection(@ConnectedSocket() socket: Socket, ...args: any[]) {
     try {
-
       console.log('Client Connected :', socket.id);
-      console.log('Client Connected :', socket.handshake.auth);
+      // console.log('Client Connected :', socket.handshake.auth);
     
       const userSocket = socket as UserSocket;
       const token = userSocket.handshake.auth?.token;
-      console.log('token', token);
-
       const payload = await this.jwtService.verify(token, {secret: process.env.JWT_SECRET});
-      console.log('userId', payload);
       const user = await this.authService.validate(payload.sub);
-      console.log
       // userSocket.user = user;
   
       if (!user) {
         console.log('disconnect user');
         return this.disconnect(socket, null);
       } else {
-        console.log('do smth', socket.id);
+        // console.log('do smth', socket.id);
   
         const userId = (await user)._id.toString();
         this.socketService.addNewConnectedUser(
@@ -77,7 +72,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         this.socketService.updateFriendsPendingInvitations(userId);
   
         this.socketService.updateFriends(userId);
-        console.log('user connected: ${client.id}');
+        console.log('user connected:', userId);
       }
     } catch (error) {
       console.log('disconnect user', error);
