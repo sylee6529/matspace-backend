@@ -17,8 +17,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         });
     }
 
-    async validate(payload: string) {
-        const decoded = await this.jwtService.verify(payload);
+    async validate(token: string) {
+        const decoded = await this.jwtService.verify(token);
         const user = await this.authService.validate(decoded);
         if (!user) {
             throw new Error('잘못된 요청입니다.');
