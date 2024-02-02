@@ -1,4 +1,4 @@
-import { ConnectedSocket, OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { SocketService } from './socket.service';
 import { Inject, Logger, OnModuleInit, UseGuards, forwardRef } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
@@ -12,7 +12,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { FriendService } from 'src/friend/friend.service';
 import { v4 as uuidv4 } from 'uuid';
 
-@WebSocketGateway(3000, { cors: { origin: '*' }, transports: ['websocket']})
+@WebSocketGateway(3000, { cors: { origin: '*'},transports: ['websocket']})
 export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {
   
   @WebSocketServer()
@@ -29,7 +29,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     private readonly jwtService: JwtService
     ) {
   }
-  
+
   onModuleInit() {
     this.logger.log('모듈 시작');
     this.socketService.setSocketServerInstance(this.server);
@@ -46,26 +46,20 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     this.logger.log(`Client Disconnected : ${socket.id}`);
   }
 
-  // @Interval(500)
-  // @SubscribeMessage('connect')
-  // async handleConnect(@ConnectedSocket() client: Socket) {
-  //   console.log('Socket ID:', client.id);
-  // }
-
-  async handleConnection(socket: Socket, ...args: any[]) {
+  async handleConnection(@ConnectedSocket() socket: Socket, ...args: any[]) {
     try {
-      console.log('handleConnection', socket.id)
-      // const userSocket = socket as UserSocket;
-      // console.log(socket)
-      const query_str = args[0].url.split('/')[2];
-      var token = query_str.split('=')[1].slice(0, -4);
 
-      console.log(token);
-      // const token = socket.handshake.auth?.token;
-      const token_obj = await this.jwtService.verifyAsync(token);
-      console.log("222", token_obj.sub);
-      const user = await this.authService.validate(token_obj.sub);
-      console.log(user);
+      console.log('Client Connected :', socket.id);
+      console.log('Client Connected :', socket.handshake.auth);
+    
+      const userSocket = socket as UserSocket;
+      const token = userSocket.handshake.auth?.token;
+      console.log('token', token);
+
+      const payload = await this.jwtService.verify(token, {secret: process.env.JWT_SECRET});
+      console.log('userId', payload);
+      const user = await this.authService.validate(payload.sub);
+      console.log
       // userSocket.user = user;
   
       if (!user) {
@@ -74,7 +68,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       } else {
         console.log('do smth', socket.id);
   
-        const userId = (await user)._id.toString()
+        const userId = (await user)._id.toString();
         this.socketService.addNewConnectedUser(
           socket.id,
           userId,
