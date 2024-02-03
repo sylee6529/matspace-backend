@@ -12,7 +12,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { FriendService } from 'src/friend/friend.service';
 import { v4 as uuidv4 } from 'uuid';
 
-@WebSocketGateway(3000, { cors: { origin: '*'},transports: ['websocket']})
+@WebSocketGateway()
 export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {
   
   @WebSocketServer()
@@ -51,10 +51,13 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       console.log('Client Connected :', socket.id);
       // console.log('Client Connected :', socket.handshake.auth);
     
-      const userSocket = socket as UserSocket;
-      const token = userSocket.handshake.auth?.token;
+      // const userSocket = socket as UserSocket;
+      const token = socket.handshake.auth?.token;
+      console.log('token', token);
       const payload = await this.jwtService.verify(token, {secret: process.env.JWT_SECRET});
+      console.log('payload', payload);
       const user = await this.authService.validate(payload.sub);
+      console.log('user', user);
       // userSocket.user = user;
   
       if (!user) {
@@ -80,27 +83,6 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     }
   }
   
-  @SubscribeMessage('message')
-  handleMessage(client: any, payload: any): string {
-    return 'Hello world!';
-  }
-
-  @SubscribeMessage('conn-init')
-  handleConnInit(socket: Socket, data: any): void {
-    const { connUserSocketId } = data;
-
-    const initData = { connUserSocketId: socket.id };
-    socket.to(connUserSocketId).emit("conn-init", initData);
-  }
-
-  @SubscribeMessage('conn-signal')
-  handleConnSignal(socket: Socket, data: any): void {
-    const { connUserSocketId, signal } = data;
-
-    const signalingData = { signal, connUserSocketId: socket.id };
-    socket.to(connUserSocketId).emit("conn-signal", signalingData);
-  }
-
   @SubscribeMessage('disconnect')
   disconnect(socket: Socket, data: any): void {
     const activeRooms = this.socketService.getActiveRooms();
@@ -118,9 +100,26 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     this.socketService.removeConnectedUser(socket.id);
   }
 
-  @Interval(8000)
-  emitOnlineUsers() {
-    const onlineUsers = this.socketService.getOnlineUsers();
-    this.server.emit("online-users", { onlineUsers });
-  }
+  @SubscribeMessage('create-room')
+    async handleRoomCreate(@ConnectedSocket() socket: Socket, data: any): Promise<void> {
+        console.log("handling room create event");
+        const token = socket.handshake.auth?.token;
+        const payload = await this.jwtService.verify(token, {secret: process.env.JWT_SECRET});
+        const user = await this.authService.validate(payload.sub);
+        console.log("user", user)
+        if(!user){
+            return;
+        }
+        // const roomId = cryptoRandomString({length: 3, type: 'hex'})
+        const roomDetails = this.socketService.addNewActiveRoom(user._id.toString(), socket.id);
+        const roomId = roomDetails.roomId;
+        console.log("roomDetails", roomDetails)
+        socket.join(roomId);
+
+        socket.emit("create-room-response", {
+            roomId
+        });
+
+        // this.updateRooms(null);
+    }
 }

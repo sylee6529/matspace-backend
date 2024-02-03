@@ -1,6 +1,6 @@
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { SubscribeMessage } from '@nestjs/websockets';
+import { ConnectedSocket, SubscribeMessage } from '@nestjs/websockets';
 import { Model } from 'mongoose';
 import { Socket } from 'socket.io';
 import { userDocument } from 'src/auth/user.schema';
@@ -10,6 +10,7 @@ import { UserSocket } from 'src/socket/interface/user.handshake';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from 'src/auth/auth.service';
 import { SocketGateway } from 'src/socket/socket.gateway';
+import cryptoRandomString from 'crypto-random-string';
 
 @Injectable()
 export class RoomService {
@@ -19,22 +20,7 @@ export class RoomService {
         private readonly authService: AuthService,
     ){}
 
-    @SubscribeMessage('room-create')
-    async handleRoomCreate(socket: Socket, data: any): Promise<void> {
-        console.log("handling room create event");
-
-        const userSocket = socket as UserSocket;
-        const token = userSocket.handshake.auth?.token;
-        const userId = this.jwtService.verify(token);
-        const user = await this.authService.validate(userId);
-        const roomDetails = this.socketService.addNewActiveRoom(userId, socket.id);
-
-        socket.emit("room-create", {
-            roomDetails,
-        });
-
-        this.updateRooms(null);
-    }
+    
 
     @SubscribeMessage('room-join')
     async handleRoomJoin(socket: Socket, data: any): Promise<void> {
