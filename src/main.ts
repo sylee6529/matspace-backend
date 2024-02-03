@@ -3,12 +3,24 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { ClassSerializerInterceptor } from '@nestjs/common';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+import { ConfigService } from '@nestjs/config';
+import { WebsocketAdapter } from './socket/adapter/websocket-adapter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors();
-  app.useWebSocketAdapter(new IoAdapter(app));
-  
+  // app.enableCors();
+  // app.useWebSocketAdapter(new IoAdapter(app));
+  const configService = app.get(ConfigService);
+  app.enableCors({
+    origin: configService.get('FRONTEND_LOCAL_URL'),
+  });
+
+  app.useWebSocketAdapter(
+    new WebsocketAdapter(app, {
+      origin: configService.get('FRONTEND_LOCAL_URL'),
+    }),
+  );
+
   const config = new DocumentBuilder()
     .setTitle('맛집 취향 분석 API Docs')
     .setDescription('천하무적팀 Swagger API 명세서')
@@ -21,7 +33,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
   
-  app.enableCors();
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   await app.listen(8080);
