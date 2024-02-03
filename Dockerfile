@@ -1,6 +1,6 @@
 # syntax = docker/dockerfile:1
 
-# Adjust NODE_VERSION as desired
+# NODE_VERSION as desired
 ARG NODE_VERSION=20.11.0
 FROM node:${NODE_VERSION}-slim as base
 
@@ -18,14 +18,15 @@ FROM base as build
 
 # Install packages needed to build node modules
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential node-gyp pkg-config python-is-python3
+    apt-get install --no-install-recommends -y build-essential node-gyp pkg-config python3
 
 # Install node modules
-COPY --link package-lock.json package.json ./
+COPY package-lock.json package.json ./
 RUN npm ci --include=dev
 
-# Copy application code
-COPY --link . .
+# Copy .env file and application code
+COPY .env .
+COPY . .
 
 # Build application
 RUN npm run build
@@ -34,7 +35,7 @@ RUN npm run build
 # Final stage for app image
 FROM base
 
-# Copy built application
+# Copy .env file and built application
 COPY --from=build /app /app
 
 # Start the server by default, this can be overwritten at runtime
