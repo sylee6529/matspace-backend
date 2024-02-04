@@ -13,6 +13,8 @@ import { RoomModule } from './room/room.module';
 import { FriendController } from './friend/friend.controller';
 import { AuthService } from './auth/auth.service';
 import { JwtService } from '@nestjs/jwt';
+import { KeywordsModule } from './keywords/keywords.module';
+import { RestaurantsModule } from './restaurants/restaurants.module';
 
 @Module({
   imports: [CatModule,
@@ -29,7 +31,9 @@ import { JwtService } from '@nestjs/jwt';
   AuthModule,
   FriendModule,
   SocketModule,
-  RoomModule],
+  RoomModule,
+  KeywordsModule,
+  RestaurantsModule],
   controllers: [AppController, RoomController, FriendController],
   providers: [AppService, FriendService, AuthService],
 })
