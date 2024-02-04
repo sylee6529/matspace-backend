@@ -32,15 +32,15 @@ export class SocketService {
 
     addNewConnectedUser(socketId: string, userId: string): void {
         this.connectedUsers.set(socketId, userId);
-        console.log('new connected users');
-        console.log(this.connectedUsers);
+        // console.log('new connected users');
+        // console.log(this.connectedUsers);
     }
     
     removeConnectedUser(socketId: string): void {
         if (this.connectedUsers.has(socketId)) {
           this.connectedUsers.delete(socketId);
-          console.log('new connected users');
-          console.log(this.connectedUsers);
+        //   console.log('new connected users');
+        //   console.log(this.connectedUsers);
         }
     }
     
@@ -75,8 +75,8 @@ export class SocketService {
 
         this.activeRooms = [...this.activeRooms, newActiveRoom];
 
-        console.log('new active rooms: ');
-        console.log(this.activeRooms);
+        // console.log('new active rooms: ');
+        // console.log(this.activeRooms);
 
         return newActiveRoom;
     }

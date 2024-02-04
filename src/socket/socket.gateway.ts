@@ -12,7 +12,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { FriendService } from 'src/friend/friend.service';
 import { v4 as uuidv4 } from 'uuid';
 
-@WebSocketGateway(3000, { cors: { origin: '*'},transports: ['websocket']})
+@WebSocketGateway()
 export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {
   
   @WebSocketServer()
@@ -49,58 +49,31 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   async handleConnection(@ConnectedSocket() socket: Socket, ...args: any[]) {
     try {
       console.log('Client Connected :', socket.id);
-      // console.log('Client Connected :', socket.handshake.auth);
-    
-      const userSocket = socket as UserSocket;
-      const token = userSocket.handshake.auth?.token;
+
+      const token = socket.handshake.auth?.token;
       const payload = await this.jwtService.verify(token, {secret: process.env.JWT_SECRET});
       const user = await this.authService.validate(payload.sub);
-      // userSocket.user = user;
-  
+
       if (!user) {
         console.log('disconnect user');
         return this.disconnect(socket, null);
-      } else {
-        // console.log('do smth', socket.id);
-  
-        const userId = (await user)._id.toString();
-        this.socketService.addNewConnectedUser(
-          socket.id,
-          userId,
-        );
-        
-        this.socketService.updateFriendsPendingInvitations(userId);
-  
-        this.socketService.updateFriends(userId);
-        console.log('user connected:', userId);
       }
+
+      const userId = user._id.toString();
+      this.socketService.addNewConnectedUser(
+        socket.id,
+        userId,
+      );
+      
+      // this.socketService.updateFriendsPendingInvitations(userId);
+      // this.socketService.updateFriends(userId);
+      console.log('user connected:', userId);
     } catch (error) {
-      console.log('disconnect user', error);
+      console.log('disconnect user in handle connect', error);
       return this.disconnect(socket, null);
     }
   }
   
-  @SubscribeMessage('message')
-  handleMessage(client: any, payload: any): string {
-    return 'Hello world!';
-  }
-
-  @SubscribeMessage('conn-init')
-  handleConnInit(socket: Socket, data: any): void {
-    const { connUserSocketId } = data;
-
-    const initData = { connUserSocketId: socket.id };
-    socket.to(connUserSocketId).emit("conn-init", initData);
-  }
-
-  @SubscribeMessage('conn-signal')
-  handleConnSignal(socket: Socket, data: any): void {
-    const { connUserSocketId, signal } = data;
-
-    const signalingData = { signal, connUserSocketId: socket.id };
-    socket.to(connUserSocketId).emit("conn-signal", signalingData);
-  }
-
   @SubscribeMessage('disconnect')
   disconnect(socket: Socket, data: any): void {
     const activeRooms = this.socketService.getActiveRooms();
@@ -111,16 +84,160 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       );
 
       if (userInRoom) {
-        this.roomService.handleRoomLeave(socket, { roomId: activeRoom.roomId });
+        this.handleRoomLeave(socket, { roomId: activeRoom.roomId });
       }
     });
 
     this.socketService.removeConnectedUser(socket.id);
   }
 
-  @Interval(8000)
-  emitOnlineUsers() {
-    const onlineUsers = this.socketService.getOnlineUsers();
-    this.server.emit("online-users", { onlineUsers });
-  }
+  @SubscribeMessage('room-leave')
+    handleRoomLeave(socket: Socket, data: any): void {
+        const { roomId } = data;
+
+        const activeRoom = this.socketService.getActiveRoom(roomId);
+
+        if (activeRoom) {
+            this.socketService.leaveActiveRoom(roomId, socket.id);
+
+            const updatedActiveRoom = this.socketService.getActiveRoom(roomId);
+
+            if (updatedActiveRoom) {
+            updatedActiveRoom.participants.forEach((participant) => {
+                socket.to(participant.socketId).emit("room-participant-left", {
+                connUserSocketId: socket.id,
+                });
+            });
+            }
+        }
+    }
+
+  @SubscribeMessage('create-room')
+    async handleRoomCreate(@MessageBody() data: string, @ConnectedSocket() socket: Socket): Promise<void> {
+        console.log("handling room create event", data);
+        const token = socket.handshake.auth?.token;
+        const payload = await this.jwtService.verify(token, {secret: process.env.JWT_SECRET});
+        const user = await this.authService.validate(payload.sub);
+        console.log("user", user)
+        if(!user){
+            return;
+        }
+        // const roomId = cryptoRandomString({length: 3, type: 'hex'})
+        const roomDetails = this.socketService.addNewActiveRoom(user._id.toString(), socket.id);
+        const roomId = roomDetails.roomId;
+        console.log("roomId", roomId)
+        console.log("roomDetails", roomDetails)
+        socket.join(roomId);
+
+        socket.emit("create-room-response", {
+            roomId
+        });
+
+        // this.updateRooms(null);
+    }
+
+    @SubscribeMessage('join-room')
+    async handleRoomJoin(@MessageBody() data: any, @ConnectedSocket() socket: Socket): Promise<void> {
+      
+        const roomId = data.roomId;
+        console.log("handling room join event", roomId);
+        // const userSocket = socket as UserSocket;
+
+        const token = socket.handshake.auth?.token;
+        // console.log(token)
+        const payload = await this.jwtService.verify(token, {secret: process.env.JWT_SECRET});
+        const user = await this.authService.validate(payload.sub);
+
+        socket.join(roomId);
+        console.log("user joined room", roomId, user._id.toString());
+
+        const room = this.server.in(roomId)
+        const roomSockets = await room.fetchSockets();
+        const numberOfPeopleInRoom = roomSockets.length;
+
+        if (numberOfPeopleInRoom === 2) {
+          room.emit('another-person-ready');
+        }
+
+        if (numberOfPeopleInRoom > 2) {
+          room.emit('too-many-people');
+          return;
+        }
+
+        socket.emit("user-joined", {
+            roomId,
+            userId: user._id.toString()
+      });
+
+        
+        socket.emit("join-room-response", roomId);
+
+      console.log("number of people in room", numberOfPeopleInRoom);
+    }
+
+    @SubscribeMessage('send-connection-offer')
+    async handleSendConnectionOffer(@MessageBody() {
+      offer,
+      roomId,
+    }: {
+      offer: RTCSessionDescriptionInit;
+      roomId: string;
+    }, @ConnectedSocket() socket: Socket): Promise<void> {
+      console.log("handling send connection offer event");
+      const room = this.server.in(roomId);
+      const token = socket.handshake.auth?.token;
+      // console.log(token)
+      const payload = await this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
+      const user = await this.authService.validate(payload.sub);
+      if(!user){
+        console.log("user not found");
+          return;
+      }
+      room.except(socket.id).emit("send-connection-offer", {
+        offer,
+        roomId
+      });
+    }
+
+    @SubscribeMessage('answer')
+    async handleSendConnectionAnswer(@MessageBody() {
+      answer,
+      roomId,
+    }: {
+      answer: RTCSessionDescriptionInit;
+      roomId: string;
+    }, @ConnectedSocket() socket: Socket): Promise<void> {
+      console.log("handling send connection answer event", answer, roomId);
+      const room = this.server.in(roomId);
+      const token = socket.handshake.auth?.token;
+      // console.log(token)
+      const payload = await this.jwtService.verify(token, {secret: process.env.JWT_SECRET});
+      const user = await this.authService.validate(payload.sub);
+      if(!user){
+        console.log("user not found");
+          return;
+      }
+      room.except(socket.id).emit("answer", { answer, roomId });
+    }
+
+    @SubscribeMessage('send-candidate')
+    async handleSendIceCandidate(@MessageBody() {
+      candidate,
+      roomId,
+    }: {
+      candidate: RTCIceCandidate;
+      roomId: string;
+    }, @ConnectedSocket() socket: Socket): Promise<void> {
+      console.log("handling send ice candidate event");
+      const room = this.server.in(roomId);
+      const token = socket.handshake.auth?.token;
+      // console.log(token)
+      const payload = await this.jwtService.verify(token, {secret: process.env.JWT_SECRET});
+      const user = await this.authService.validate(payload.sub);
+      if(!user){
+        console.log("user not found");
+          return;
+      }
+      room.except(socket.id).emit("send-candidate", { candidate, roomId });
+    }
 }
