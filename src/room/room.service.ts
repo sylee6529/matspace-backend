@@ -13,37 +13,6 @@ export class RoomService {
         private readonly authService: AuthService,
     ){}
 
-    
-
-    @SubscribeMessage('room-join')
-    async handleRoomJoin(socket: Socket, data: any): Promise<void> {
-        const { roomId } = data;
-        // const userSocket = socket as UserSocket;
-
-        const token = socket.handshake.auth?.token;
-        // console.log(token)
-        const userId = this.jwtService.verify(token);
-        const user = await this.authService.validate(userId);
-
-        const participantDetails = {
-            userId: user._id.toString(),
-            socketId: socket.id,
-        };
-
-        const roomDetails = this.socketService.getActiveRoom(roomId);
-        this.socketService.joinActiveRoom(roomId, participantDetails);
-
-        // send information to users in room that they should prepare for incoming connection
-        roomDetails.participants.forEach((participant) => {
-            if (participant.socketId !== participantDetails.socketId) {
-            socket.to(participant.socketId).emit("conn-prepare", {
-                connUserSocketId: participantDetails.socketId,
-            });
-            }
-        });
-
-        this.updateRooms(null);
-    }
 
     @SubscribeMessage('room-leave')
     handleRoomLeave(socket: Socket, data: any): void {
