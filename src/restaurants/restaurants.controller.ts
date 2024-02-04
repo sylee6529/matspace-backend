@@ -15,19 +15,22 @@ export class RestaurantsController {
                 name: '맛있는 식당1', 
                 rating: 4.5, 
                 address: '서울시 강남구', 
-                thumbnailURL: 'https://www.palnews.co.kr/news/photo/201801/92969_25283_5321.jpg' 
+                thumbnailURL: 'https://www.palnews.co.kr/news/photo/201801/92969_25283_5321.jpg',
+                keyword_list: ["한식", "분위기 좋은", "가성비 좋은"]
             },
             { restarantId: 3, 
                 name: '맛있는 식당2', 
                 rating: 4.3, 
                 address: '서울시 서초구', 
-                thumbnailURL: 'https://www.palnews.co.kr/news/photo/201801/92969_25283_5321.jpg' 
+                thumbnailURL: 'https://www.palnews.co.kr/news/photo/201801/92969_25283_5321.jpg',
+                keyword_list: ["한식", "분위기 좋은", "가성비 좋은"]
             },
             { restarantId: 4, 
                 name: '맛있는 식당3', 
                 rating: 4.2, 
                 address: '서울시 성북구', 
-                thumbnailURL: 'https://www.palnews.co.kr/news/photo/201801/92969_25283_5321.jpg' 
+                thumbnailURL: 'https://www.palnews.co.kr/news/photo/201801/92969_25283_5321.jpg',
+                keyword_list: ["한식", "분위기 좋은", "가성비 좋은"] 
             }
         ]
         return recommendedRestaurants;
