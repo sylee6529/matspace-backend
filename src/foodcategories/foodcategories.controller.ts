@@ -27,7 +27,7 @@ export class FoodcategoriesController {
         @GetUserId() userId, 
         @Query() roomId: string, 
         @Body() foodCategoriesDto: PostFoodCategoriesDto) {
-            // TODO: Room 인원 전원이 선택 완료하면, 모두에게 socket 보내기
+            // TODO: 요청이 오면 하나씩 DB에 저장, Room 인원 전원이 선택 완료하면 모두에게 socket 보내기
         return null;
     }
 }
