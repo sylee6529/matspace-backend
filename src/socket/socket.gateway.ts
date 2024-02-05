@@ -283,6 +283,6 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         console.log("user not found");
           return;
       }
-      room.emit("receive-speech", roomId);
+      room.emit("receive-speech", user._id.toString());
     }
 }
