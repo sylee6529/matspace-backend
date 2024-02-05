@@ -19,7 +19,7 @@ export class FoodcategoriesController {
         return null;
     }
 
-    @Post('')
+    @Post('/done')
     @ApiOperation({ summary: 'Post a user\'s selected food categories API', description: '유저가 말한 푸드 카테고리를 서버로 보냅니다.' })
     @ApiCreatedResponse({ description: '유저가 선택한 푸드 카테고리 전송 완료.' })
     @UseGuards()
