@@ -1,7 +1,7 @@
 import { Body, Controller, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GetUserId } from 'src/util/decorator/get-user.decorator';
-import { PostSpeechSentenceDto } from './dto/post-speech-sentence.dto';
+import { PostSpeechSentenceDto } from '../common/dto/post-speech-sentence.dto';
 import { PostFoodCategoriesDto } from './dto/post-foodcategories.dto';
 
 @ApiTags('음식 카테고리 API')
