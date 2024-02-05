@@ -19,6 +19,8 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   server: Server;
   // private readonly connectedUsers: Map<string, string> = new Map();
   // private activeRooms: any[] = [];
+  private roomCreatorSocketIdMap: Map<string, string> = new Map();
+  private socketUserIdMap: Map<string, string> = new Map();
 
   private logger: Logger = new Logger('SocketGateway');
 
@@ -65,8 +67,6 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         userId,
       );
       
-      // this.socketService.updateFriendsPendingInvitations(userId);
-      // this.socketService.updateFriends(userId);
       console.log('user connected:', userId);
     } catch (error) {
       console.log('disconnect user in handle connect', error);
@@ -118,16 +118,23 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         const token = socket.handshake.auth?.token;
         const payload = await this.jwtService.verify(token, {secret: process.env.JWT_SECRET});
         const user = await this.authService.validate(payload.sub);
-        console.log("user", user)
+        // console.log("user", user)
         if(!user){
             return;
         }
         // const roomId = cryptoRandomString({length: 3, type: 'hex'})
         const roomDetails = this.socketService.addNewActiveRoom(user._id.toString(), socket.id);
         const roomId = roomDetails.roomId;
-        console.log("roomId", roomId)
-        console.log("roomDetails", roomDetails)
+        // console.log("roomId", roomId)
+        // console.log("roomDetails", roomDetails)
         socket.join(roomId);
+
+        this.roomCreatorSocketIdMap.set(roomId, socket.id);
+        this.socketUserIdMap.set(socket.id, user._id.toString());
+
+        // console.log("room-creator-map", roomId, socket.id);
+        // console.log("room-user-map", roomId, user._id.toString());
+        // console.log("현재", this.roomCreatorSocketIdMap, this.socketUserIdMap);
 
         socket.emit("create-room-response", {
             roomId
@@ -139,41 +146,63 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     @SubscribeMessage('join-room')
     async handleRoomJoin(@MessageBody() data: any, @ConnectedSocket() socket: Socket): Promise<void> {
       
-        const roomId = data.roomId;
-        console.log("handling room join event", roomId);
-        // const userSocket = socket as UserSocket;
+      const roomId = data.roomId;
+      console.log("handling room join event", roomId);
 
-        const token = socket.handshake.auth?.token;
-        // console.log(token)
-        const payload = await this.jwtService.verify(token, {secret: process.env.JWT_SECRET});
-        const user = await this.authService.validate(payload.sub);
+      const token = socket.handshake.auth?.token;
+      const payload = await this.jwtService.verify(token, {secret: process.env.JWT_SECRET});
+      const user = await this.authService.validate(payload.sub);
 
-        socket.join(roomId);
-        console.log("user joined room", roomId, user._id.toString());
+      socket.join(roomId);
+      console.log("user joined room", roomId, user._id.toString());
 
-        const room = this.server.in(roomId)
-        const roomSockets = await room.fetchSockets();
-        const numberOfPeopleInRoom = roomSockets.length;
+      const room = this.server.in(roomId)
+      const roomSockets = await room.fetchSockets();
+      const numberOfPeopleInRoom = roomSockets.length;
 
-        if (numberOfPeopleInRoom === 2) {
-          room.emit('another-person-ready');
-        }
+      // const rooms = this.server.of("/").adapter.rooms;
+      // const sids = this.server.of("/").adapter.sids;
 
-        if (numberOfPeopleInRoom > 2) {
-          room.emit('too-many-people');
-          return;
-        }
-
-        socket.emit("user-joined", {
-            roomId,
-            userId: user._id.toString()
-      });
-
-        
-        socket.emit("join-room-response", roomId);
-
+      // console.log("rooms", rooms);
+      // console.log("sids", sids);
       console.log("number of people in room", numberOfPeopleInRoom);
+
+      if (numberOfPeopleInRoom === 2) {
+        room.emit('another-person-ready');
+        const creatorSocketId = this.roomCreatorSocketIdMap.get(roomId);
+        const creatorId = this.socketUserIdMap.get(creatorSocketId);
+        console.log("all-player-ready: creatorId, userId", creatorId, user._id.toString());
+
+        console.log("creator is", creatorId, creatorSocketId);
+        socket.to(creatorSocketId).emit('all-player-ready');
+
+      }
+
+      if (numberOfPeopleInRoom > 2) {
+        room.emit('too-many-people');
+        return;
+      }
+
+      socket.emit("join-room-response", roomId);
+      
     }
+
+    @SubscribeMessage('start-play-room')
+    async handleStartPlayRoom(@MessageBody() data: any, @ConnectedSocket() socket: Socket): Promise<void> {
+      console.log("handling start play room event", data);
+      const roomId = data.roomId;
+      const room = this.server.in(roomId);
+      const token = socket.handshake.auth?.token;
+      // console.log(token)
+      const payload = await this.jwtService.verify(token, {secret: process.env.JWT_SECRET});
+      const user = await this.authService.validate(payload.sub);
+      if(!user){
+        console.log("user not found");
+          return;
+      }
+      room.emit("start-play-room-response", roomId);
+    }
+
 
     @SubscribeMessage('send-connection-offer')
     async handleSendConnectionOffer(@MessageBody() {
@@ -207,7 +236,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       answer: RTCSessionDescriptionInit;
       roomId: string;
     }, @ConnectedSocket() socket: Socket): Promise<void> {
-      console.log("handling send connection answer event", answer, roomId);
+      console.log("handling send connection answer event");
       const room = this.server.in(roomId);
       const token = socket.handshake.auth?.token;
       // console.log(token)
