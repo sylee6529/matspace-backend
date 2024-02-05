@@ -269,4 +269,20 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       }
       room.except(socket.id).emit("send-candidate", { candidate, roomId });
     }
+
+    @SubscribeMessage('start-speech')
+    async handleStartSpeech(@MessageBody() data: any, @ConnectedSocket() socket: Socket): Promise<void> {
+      console.log("handling start speech event", data);
+      const roomId = data.roomId;
+      const room = this.server.in(roomId);
+      const token = socket.handshake.auth?.token;
+      // console.log(token)
+      const payload = await this.jwtService.verify(token, {secret: process.env.JWT_SECRET});
+      const user = await this.authService.validate(payload.sub);
+      if(!user){
+        console.log("user not found");
+          return;
+      }
+      room.emit("receive-speech", roomId);
+    }
 }
