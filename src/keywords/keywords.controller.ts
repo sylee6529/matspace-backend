@@ -44,7 +44,7 @@ export class KeywordsController {
     @ApiOperation({ summary: 'Post mood keywords by user speech API', description: '문장으로 분위기 태그 리스트를 받을 수 있습니다.' })
     @ApiCreatedResponse({ description: '무드 키워드 리스트 조회 완료.' })
     @UseGuards()
-    async createMoodKeywordsSelected(
+    async getMoodKeywordsBySpeech(
         @GetUserId() userId, 
         @Query() roomId: string, 
         @Body() speechSentenceDto: PostSpeechSentenceDto) {
