@@ -1,7 +1,9 @@
-import { Controller, Get, HttpStatus, Query, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Post, Query, Res, UseGuards } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { KeywordsService } from './keywords.service';
 import { Response } from 'express';
+import { GetUserId } from 'src/util/decorator/get-user.decorator';
+import { PostSpeechSentenceDto } from 'src/common/dto/post-speech-sentence.dto';
 
 @ApiTags('키워드 API')
 @Controller('api/keywords')
@@ -36,5 +38,17 @@ export class KeywordsController {
             { id: 20, name: '즐거움' },
         ]
         return moodKeywords;
+    }
+
+    @Post('/mood/speech')
+    @ApiOperation({ summary: 'Post mood keywords by user speech API', description: '문장으로 분위기 태그 리스트를 받을 수 있습니다.' })
+    @ApiCreatedResponse({ description: '무드 키워드 리스트 조회 완료.' })
+    @UseGuards()
+    async createMoodKeywordsSelected(
+        @GetUserId() userId, 
+        @Query() roomId: string, 
+        @Body() speechSentenceDto: PostSpeechSentenceDto) {
+            // TODO: Fastapi로 request를 보내고, 받은 response를 다시 client에게 socket으로 보내기
+        return null;
     }
 }
