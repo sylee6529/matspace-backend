@@ -4,6 +4,7 @@ import { KeywordsService } from './keywords.service';
 import { Response } from 'express';
 import { GetUserId } from 'src/util/decorator/get-user.decorator';
 import { PostSpeechSentenceDto } from 'src/common/dto/post-speech-sentence.dto';
+import { PostMoodKeywordsDto } from './dto/post-moodkeywords.dto';
 
 @ApiTags('키워드 API')
 @Controller('api/keywords')
@@ -48,6 +49,18 @@ export class KeywordsController {
         @GetUserId() userId, 
         @Query() roomId: string, 
         @Body() speechSentenceDto: PostSpeechSentenceDto) {
+            // TODO: Fastapi로 request를 보내고, 받은 response를 다시 client에게 socket으로 보내기
+        return null;
+    }
+    
+    @Post('/mood/done')
+    @ApiOperation({ summary: 'Post mood keywords by user speech API', description: '문장으로 분위기 태그 리스트를 받을 수 있습니다.' })
+    @ApiCreatedResponse({ description: '유저가 선택한 무드 키워드 전송 완료.' })
+    @UseGuards()
+    async createMoodKeywordsSelected(
+        @GetUserId() userId, 
+        @Query() roomId: string, 
+        @Body() moodKeywordsDto: PostMoodKeywordsDto) {
             // TODO: Fastapi로 request를 보내고, 받은 response를 다시 client에게 socket으로 보내기
         return null;
     }
