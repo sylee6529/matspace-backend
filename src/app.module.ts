@@ -15,6 +15,7 @@ import { AuthService } from './auth/auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { KeywordsModule } from './keywords/keywords.module';
 import { RestaurantsModule } from './restaurants/restaurants.module';
+import { FoodcategoriesModule } from './foodcategories/foodcategories.module';
 
 @Module({
   imports: [CatModule,
@@ -33,7 +34,8 @@ import { RestaurantsModule } from './restaurants/restaurants.module';
   SocketModule,
   RoomModule,
   KeywordsModule,
-  RestaurantsModule],
+  RestaurantsModule,
+  FoodcategoriesModule],
   controllers: [AppController, RoomController, FriendController],
   providers: [AppService, FriendService, AuthService],
 })
