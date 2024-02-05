@@ -26,8 +26,8 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
   constructor(
     private readonly socketService: SocketService,
-        private readonly roomService: RoomService,
-        private readonly authService: AuthService,
+    private readonly roomService: RoomService,
+    private readonly authService: AuthService,
     private readonly jwtService: JwtService
     ) {
   }
@@ -284,5 +284,37 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
           return;
       }
       room.emit("receive-speech", user._id.toString());
+    }
+
+    @SubscribeMessage('select-done')
+    async handleSelectDone(@MessageBody() data: any, @ConnectedSocket() socket: Socket): Promise<void> {
+      console.log("handling select done event");
+      const roomId = data.roomId;
+      let currentMode = data.roomMode;
+      let roomReadyCount = data.roomReadyCount;
+
+      const room = this.server.in(roomId);
+
+      const token = socket.handshake.auth?.token;
+      // console.log(token)
+      const payload = await this.jwtService.verify(token, {secret: process.env.JWT_SECRET});
+      const user = await this.authService.validate(payload.sub);
+      if(!user){
+        console.log("user not found");
+          return;
+      }
+
+      if(typeof currentMode === 'string'){
+        currentMode = parseInt(currentMode);
+      }
+
+      let newMode = null;
+      if(currentMode <= 3) {
+        newMode = currentMode + 1;
+      } else {
+        newMode = null;
+      }
+      
+      room.emit("mode-change-response", {roomReadyCount, newMode});
     }
 }
