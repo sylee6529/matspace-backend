@@ -18,24 +18,25 @@ import { RestaurantsModule } from './restaurants/restaurants.module';
 import { FoodcategoriesModule } from './foodcategories/foodcategories.module';
 
 @Module({
-  imports: [CatModule,
+  imports: [
+    CatModule,
     ConfigModule.forRoot({
       isGlobal: true,
-    }
-    ),
-  MongooseModule.forRootAsync({
-    useFactory: async (configService: ConfigService) => ({
-      uri: configService.get<string>('DATABASE_URI'),
     }),
-    inject: [ConfigService],
-  }),
-  AuthModule,
-  FriendModule,
-  SocketModule,
-  RoomModule,
-  KeywordsModule,
-  RestaurantsModule,
-  FoodcategoriesModule],
+    MongooseModule.forRootAsync({
+      useFactory: async (configService: ConfigService) => ({
+        uri: configService.get<string>('DATABASE_URI'),
+      }),
+      inject: [ConfigService],
+    }),
+    AuthModule,
+    FriendModule,
+    SocketModule,
+    RoomModule,
+    KeywordsModule,
+    RestaurantsModule,
+    FoodcategoriesModule,
+  ],
   controllers: [AppController, RoomController, FriendController],
   providers: [AppService, FriendService, AuthService],
 })
