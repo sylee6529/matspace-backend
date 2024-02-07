@@ -6,7 +6,10 @@ import { Response } from 'express';
 @Controller('api/restaurants')
 export class RestaurantsController {
   @Get('/keywords')
-  @ApiOperation({ summary: 'Get Restaurants by keywords API', description: '교집합 추천 식당 리스트를 받을 수 있습니다.' })
+  @ApiOperation({
+    summary: 'Get Restaurants by keywords API',
+    description: '교집합 추천 식당 리스트를 받을 수 있습니다.',
+  })
   @ApiCreatedResponse({ description: '교집합 추천 식당 리스트 조회 완료.' })
   @UseGuards()
   async getMoodKeywords(@Query() roomId: string) {

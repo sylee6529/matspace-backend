@@ -19,13 +19,15 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         signOptions: { expiresIn: '1d' },
       }),
     }),
-    MongooseModule.forFeature([{ 
-      name: User.name, 
-      schema: userSchema 
-    }]),
+    MongooseModule.forFeature([
+      {
+        name: User.name,
+        schema: userSchema,
+      },
+    ]),
   ],
-  providers: [AuthService, JwtStrategy,],
+  providers: [AuthService, JwtStrategy],
   controllers: [AuthController],
-  exports: [JwtStrategy, PassportModule, AuthService, MongooseModule, JwtModule]
+  exports: [JwtStrategy, PassportModule, AuthService, MongooseModule, JwtModule],
 })
 export class AuthModule {}
