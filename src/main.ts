@@ -25,14 +25,11 @@ async function bootstrap() {
     .setTitle('맛집 취향 분석 API Docs')
     .setDescription('천하무적팀 Swagger API 명세서')
     .setVersion('1.0')
-    .addBearerAuth(
-        { type: 'http', scheme: 'bearer', bearerFormat: 'Token' },
-        'access-token',
-      )
+    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'Token' }, 'access-token')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-  
+
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   app.useGlobalPipes(new ValidationPipe());
 

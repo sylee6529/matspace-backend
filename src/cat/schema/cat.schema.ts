@@ -4,15 +4,15 @@ import { HydratedDocument } from 'mongoose';
 export type CatDocument = HydratedDocument<Cat>;
 
 @Schema()
-export class Cat { 
-    @Prop()
-    name: string;
+export class Cat {
+  @Prop()
+  name: string;
 
-    @Prop()
-    age: number;
+  @Prop()
+  age: number;
 
-    @Prop()
-    breed: string;
+  @Prop()
+  breed: string;
 }
 
 export const CatSchema = SchemaFactory.createForClass(Cat);

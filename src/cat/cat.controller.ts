@@ -8,18 +8,18 @@ import { Response } from 'express';
 @ApiTags('test API')
 @Controller('cats')
 export class CatController {
-    constructor(private readonly catsService: CatService) {}
+  constructor(private readonly catsService: CatService) {}
 
-    @Post()
-    @ApiOperation({ summary: '고양이 생성 API', description: '고양이를 생성한다.' })
-    @ApiCreatedResponse({ description: '고양이를 생성한다.', type: CreateCatDto })
-    async create(@Body() createCatDto: CreateCatDto, @Res() res: Response) {
-        const cat: Cat = await this.catsService.create(createCatDto);
-        return res.status(HttpStatus.CREATED).json(cat);
-    }
+  @Post()
+  @ApiOperation({ summary: '고양이 생성 API', description: '고양이를 생성한다.' })
+  @ApiCreatedResponse({ description: '고양이를 생성한다.', type: CreateCatDto })
+  async create(@Body() createCatDto: CreateCatDto, @Res() res: Response) {
+    const cat: Cat = await this.catsService.create(createCatDto);
+    return res.status(HttpStatus.CREATED).json(cat);
+  }
 
-    @Get()
-    async findAll(): Promise<Cat[]> {
-        return this.catsService.findAll();
-    }
+  @Get()
+  async findAll(): Promise<Cat[]> {
+    return this.catsService.findAll();
+  }
 }

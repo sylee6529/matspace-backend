@@ -1,6 +1,6 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsNotEmpty, MaxLength, Min, MinLength } from "class-validator";
-import { Types } from "mongoose";
+import { ApiProperty } from '@nestjs/swagger';
+import { IsEmail, IsNotEmpty, MaxLength, Min, MinLength } from 'class-validator';
+import { Types } from 'mongoose';
 
 export class RegisterRequestDto {
   @IsNotEmpty()
