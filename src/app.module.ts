@@ -5,12 +5,7 @@ import { CatModule } from './cat/cat.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
-import { FriendService } from './friend/friend.service';
-import { FriendModule } from './friend/friend.module';
 import { SocketModule } from './socket/socket.module';
-import { RoomController } from './room/room.controller';
-import { RoomModule } from './room/room.module';
-import { FriendController } from './friend/friend.controller';
 import { AuthService } from './auth/auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { KeywordsModule } from './keywords/keywords.module';
@@ -30,14 +25,12 @@ import { FoodcategoriesModule } from './foodcategories/foodcategories.module';
       inject: [ConfigService],
     }),
     AuthModule,
-    FriendModule,
     SocketModule,
-    RoomModule,
     KeywordsModule,
     RestaurantsModule,
     FoodcategoriesModule,
   ],
-  controllers: [AppController, RoomController, FriendController],
-  providers: [AppService, FriendService, AuthService],
+  controllers: [AppController],
+  providers: [AppService, AuthService],
 })
 export class AppModule {}

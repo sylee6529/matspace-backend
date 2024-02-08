@@ -141,6 +141,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
     socket.join(roomId);
     console.log('user joined room', roomId, user._id.toString());
+    socket.emit('join-room-response', roomId);
 
     const room = this.server.in(roomId);
     const roomSockets = await room.fetchSockets();
@@ -167,8 +168,6 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       room.emit('too-many-people');
       return;
     }
-
-    socket.emit('join-room-response', roomId);
   }
 
   @SubscribeMessage('start-play-room')
