@@ -154,7 +154,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     // console.log("sids", sids);
     console.log('number of people in room', numberOfPeopleInRoom);
 
-    if (numberOfPeopleInRoom === 2) {
+    if (numberOfPeopleInRoom >= 1) {
       room.emit('another-person-ready');
       const creatorSocketId = this.roomCreatorSocketIdMap.get(roomId);
       const creatorId = this.socketUserIdMap.get(creatorSocketId);
@@ -174,6 +174,8 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   async handleStartPlayRoom(@MessageBody() data: any, @ConnectedSocket() socket: Socket): Promise<void> {
     console.log('handling start play room event', data);
     const roomId = data.roomId;
+    const coordinates = data.coordinates;
+
     const room = this.server.in(roomId);
     const token = socket.handshake.auth?.token;
     // console.log(token)
@@ -183,7 +185,14 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       console.log('user not found');
       return;
     }
-    room.emit('start-play-room-response', roomId);
+
+    const roomSockets = await room.fetchSockets();
+    const numberOfPeopleInRoom = roomSockets.length;
+
+    room.emit('start-play-room-response', {
+      coordinates: coordinates,
+      roomMemberCount: numberOfPeopleInRoom,
+    });
   }
 
   @SubscribeMessage('send-connection-offer')
@@ -282,7 +291,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
   @SubscribeMessage('select-done')
   async handleSelectDone(@MessageBody() data: any, @ConnectedSocket() socket: Socket): Promise<void> {
-    console.log('handling select done event');
+    console.log('handling select done event', data);
     const roomId = data.roomId;
     let currentMode = data.roomMode;
     let roomReadyCount = data.roomReadyCount;
@@ -309,5 +318,53 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     }
 
     room.emit('mode-change-response', { roomReadyCount, newMode });
+  }
+
+  @SubscribeMessage('send-speech-foodCategory')
+  async handleSendSpeechFoodCategory(@MessageBody() data: any, @ConnectedSocket() socket: Socket): Promise<void> {
+    console.log('handling send speech food category event', data);
+    console.log('11111111');
+    const speechSentence = data.speechSentence;
+    const roomId = data.roomId;
+    const foodCategories = ['한식', '중식', '일식']; // TODO: Fastapi로 request를 보내고, 받은 response를 다시 client에게 socket으로 보내기
+
+    const room = this.server.in(roomId);
+    const token = socket.handshake.auth?.token;
+    const payload = await this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
+    const user = await this.authService.validate(payload.sub);
+
+    if (!user) {
+      console.log('user not found');
+      return;
+    }
+    room.emit('receive-speech-foodCategory', {
+      userId: user._id.toString(),
+      foodCategories,
+    });
+  }
+
+  @SubscribeMessage('send-speech-keyword')
+  async handleSendSpeechKeyword(@MessageBody() data: any, @ConnectedSocket() socket: Socket): Promise<void> {
+    console.log('handling send speech keyword event', data);
+    const speechSentence = data.speechSentence;
+    const roomId = data.roomId;
+
+    const keywords = ['조용한', '분위기있는', '초밥']; // TODO: Fastapi로 request를 보내고, 받은 response를 다시 client에게 socket으로 보내기
+    const restaurantList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+
+    const room = this.server.in(roomId);
+    const token = socket.handshake.auth?.token;
+    const payload = await this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
+    const user = await this.authService.validate(payload.sub);
+
+    if (!user) {
+      console.log('user not found');
+      return;
+    }
+    room.emit('receive-speech-keyword', {
+      userId: user._id.toString(),
+      keywords: keywords,
+      restaurantList: restaurantList,
+    });
   }
 }
