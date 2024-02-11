@@ -323,7 +323,6 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   @SubscribeMessage('send-speech-foodCategory')
   async handleSendSpeechFoodCategory(@MessageBody() data: any, @ConnectedSocket() socket: Socket): Promise<void> {
     console.log('handling send speech food category event', data);
-    console.log('11111111');
     const speechSentence = data.speechSentence;
     const roomId = data.roomId;
     const foodCategories = ['한식', '중식', '일식']; // TODO: Fastapi로 request를 보내고, 받은 response를 다시 client에게 socket으로 보내기
@@ -365,6 +364,91 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       userId: user._id.toString(),
       keywords: keywords,
       restaurantList: restaurantList,
+    });
+  }
+
+  @SubscribeMessage('combine-try')
+  async handleCombineTry(@MessageBody() data: any, @ConnectedSocket() socket: Socket): Promise<void> {
+    console.log('handling combine try event', data);
+    const roomId = data.roomId;
+    const combineSelects = data.combineSelects;
+
+    const room = this.server.in(roomId);
+    const token = socket.handshake.auth?.token;
+    const payload = await this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
+    const user = await this.authService.validate(payload.sub);
+
+    if (!user) {
+      console.log('user not found');
+      return;
+    }
+
+    room.emit('receive-combine-try', {
+      combineSelects: combineSelects,
+    });
+  }
+
+  @SubscribeMessage('combine-ready')
+  async handleCombineReady(@MessageBody() data: any, @ConnectedSocket() socket: Socket): Promise<void> {
+    console.log('handling combine ready event', data);
+    const roomId = data.roomId;
+    const combineSelects = data.combineSelects;
+    const restaurantIdList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+
+    const room = this.server.in(roomId);
+    const token = socket.handshake.auth?.token;
+    const payload = await this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
+    const user = await this.authService.validate(payload.sub);
+
+    if (!user) {
+      console.log('user not found');
+      return;
+    }
+
+    room.emit('combine-result', {
+      restaurantList: restaurantIdList,
+    });
+  }
+
+  @SubscribeMessage('combine-select-result')
+  async handleCombineSelectResult(@MessageBody() data: any, @ConnectedSocket() socket: Socket): Promise<void> {
+    console.log('handling combine select result event', data);
+    const roomId = data.roomId;
+    const restPicks = data.restPicks;
+
+    const room = this.server.in(roomId);
+    const token = socket.handshake.auth?.token;
+    const payload = await this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
+    const user = await this.authService.validate(payload.sub);
+
+    if (!user) {
+      console.log('user not found');
+      return;
+    }
+
+    room.emit('combine-select-result-response', {
+      restPicks: restPicks,
+    });
+  }
+
+  @SubscribeMessage('combine-select-ready')
+  async handleCombineSelectReady(@MessageBody() data: any, @ConnectedSocket() socket: Socket): Promise<void> {
+    console.log('handling combine select ready event', data);
+    const roomId = data.roomId;
+    const pickedrestId = 1;
+
+    const room = this.server.in(roomId);
+    const token = socket.handshake.auth?.token;
+    const payload = await this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
+    const user = await this.authService.validate(payload.sub);
+
+    if (!user) {
+      console.log('user not found');
+      return;
+    }
+
+    room.emit('combine-result', {
+      pickedrestId: pickedrestId,
     });
   }
 }
