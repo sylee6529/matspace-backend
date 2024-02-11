@@ -73,17 +73,8 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
   @SubscribeMessage('disconnect')
   disconnect(socket: Socket, data: any): void {
-    const activeRooms = this.socketService.getActiveRooms();
-
-    activeRooms.forEach((activeRoom) => {
-      const userInRoom = activeRoom.participants.some((participant) => participant.socketId === socket.id);
-
-      if (userInRoom) {
-        this.handleRoomLeave(socket, { roomId: activeRoom.roomId });
-      }
-    });
-
-    this.socketService.removeConnectedUser(socket.id);
+    console.log('handling disconnect event', data);
+    socket.disconnect(true);
   }
 
   @SubscribeMessage('room-leave')
@@ -189,10 +180,15 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     const roomSockets = await room.fetchSockets();
     const numberOfPeopleInRoom = roomSockets.length;
 
-    room.emit('start-play-room-response', {
-      coordinates: coordinates,
-      roomMemberCount: numberOfPeopleInRoom,
-    });
+    for (let i = 0; i < roomSockets.length; i++) {
+      const socket = roomSockets[i];
+      console.log(`sending start play room response to ${socket.id}, player ${i + 1}`);
+      socket.emit('start-play-room-response', {
+        coordinates: coordinates,
+        roomMemberCount: numberOfPeopleInRoom,
+        playerId: i + 1,
+      });
+    }
   }
 
   @SubscribeMessage('send-connection-offer')
@@ -456,7 +452,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   async handleUserSelectedCard(@MessageBody() data: any, @ConnectedSocket() socket: Socket): Promise<void> {
     console.log('handling user selected card event', data);
     const roomId = data.roomId;
-    const targetList = data.targetList;
+    const playerId = data.playerId;
     const restaurantData = data.restaurantData;
 
     const room = this.server.in(roomId);
@@ -470,8 +466,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     }
 
     room.emit('other-user-selected-card', {
-      userId: user._id.toString(),
-      targetList: targetList,
+      playerId: playerId,
       restaurantData: restaurantData,
     });
   }
