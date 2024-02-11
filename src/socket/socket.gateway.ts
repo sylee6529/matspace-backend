@@ -393,7 +393,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     console.log('handling combine ready event', data);
     const roomId = data.roomId;
     const combineSelects = data.combineSelects;
-    const restaurantIdList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+    const restaurantIdList = [1, 2, 3, 4, 5];
 
     const room = this.server.in(roomId);
     const token = socket.handshake.auth?.token;
@@ -449,6 +449,43 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
     room.emit('combine-result', {
       pickedrestId: pickedrestId,
+    });
+  }
+
+  @SubscribeMessage('user-selected-card')
+  async handleUserSelectedCard(@MessageBody() data: any, @ConnectedSocket() socket: Socket): Promise<void> {
+    console.log('handling user selected card event', data);
+    const roomId = data.roomId;
+    const targetList = data.targetList;
+    const restaurantData = data.restaurantData;
+
+    const room = this.server.in(roomId);
+    const token = socket.handshake.auth?.token;
+    const payload = await this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
+    const user = await this.authService.validate(payload.sub);
+
+    if (!user) {
+      console.log('user not found');
+      return;
+    }
+
+    room.emit('other-user-selected-card', {
+      userId: user._id.toString(),
+      targetList: targetList,
+      restaurantData: restaurantData,
+    });
+  }
+
+  @SubscribeMessage('both-users-selected')
+  async handleBothUsersSelected(@MessageBody() data: any, @ConnectedSocket() socket: Socket): Promise<void> {
+    console.log('handling both users selected event', data);
+    const roomId = data.roomId;
+    const userSelectedList = data.userSelectedList;
+
+    const restaurantIdList = [1, 2, 3];
+    const room = this.server.in(roomId);
+    room.emit('combined-result', {
+      restaurantList: restaurantIdList,
     });
   }
 }
