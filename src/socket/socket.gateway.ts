@@ -18,20 +18,20 @@ import { JwtService } from '@nestjs/jwt';
 import { UserSocket } from './interface/user.handshake';
 import { AuthService } from 'src/auth/auth.service';
 import { v4 as uuidv4 } from 'uuid';
+import { RoomManager } from './room.manager';
 
 @WebSocketGateway()
 export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {
   @WebSocketServer()
   server: Server;
-
-  private roomCreatorSocketIdMap: Map<string, string> = new Map();
-  private socketUserIdMap: Map<string, string> = new Map();
   private logger: Logger = new Logger('SocketGateway');
+  private maxRoomMemberCount = 4;
 
   constructor(
     private readonly socketService: SocketService,
     private readonly authService: AuthService,
     private readonly jwtService: JwtService,
+    private readonly roomManager: RoomManager,
   ) {}
 
   onModuleInit() {
@@ -44,7 +44,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   handleDisconnect(socket: Socket) {
-    this.socketService.removeConnectedUser(socket.id);
+    this.disconnect(socket, null);
     this.logger.log(`Client Disconnected : ${socket.id}`);
   }
 
@@ -62,8 +62,6 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       }
 
       const userId = user._id.toString();
-      this.socketService.addNewConnectedUser(socket.id, userId);
-
       console.log('user connected:', userId);
     } catch (error) {
       console.log('disconnect user in handle connect', error);
@@ -100,7 +98,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
   @SubscribeMessage('create-room')
   async handleRoomCreate(@MessageBody() data: string, @ConnectedSocket() socket: Socket): Promise<void> {
-    console.log('handling room create event', data);
+    console.log('handling room create event');
     const token = socket.handshake.auth?.token;
     const payload = await this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
     const user = await this.authService.validate(payload.sub);
@@ -114,10 +112,16 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
     socket.join(roomId);
 
-    this.roomCreatorSocketIdMap.set(roomId, socket.id);
-    this.socketUserIdMap.set(socket.id, user._id.toString());
+    // this.roomCreatorSocketIdMap.set(roomId, socket.id);
+    // this.socketUserIdMap.set(socket.id, user._id.toString());
+    const creatorPlayerId = this.roomManager.addCreatorToRoom(roomId, socket.id, user._id.toString());
+
+    const roomData = this.roomManager.getRoomData(roomId);
+    console.log('room-create: room data는 ', roomData);
+
     socket.emit('create-room-response', {
-      roomId,
+      roomId: roomId,
+      playerId: creatorPlayerId,
     });
   }
 
@@ -129,10 +133,13 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     const token = socket.handshake.auth?.token;
     const payload = await this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
     const user = await this.authService.validate(payload.sub);
+    const userId = user._id.toString();
 
     socket.join(roomId);
-    console.log('user joined room', roomId, user._id.toString());
-    socket.emit('join-room-response', roomId);
+    const playerId = this.roomManager.addPlayerToRoom(roomId, socket.id, userId);
+
+    console.log('user joined room', roomId, userId);
+    socket.emit('join-room-response', { roomId: roomId, playerId: playerId });
 
     const room = this.server.in(roomId);
     const roomSockets = await room.fetchSockets();
@@ -145,17 +152,24 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     // console.log("sids", sids);
     console.log('number of people in room', numberOfPeopleInRoom);
 
+    const roomData = this.roomManager.getRoomData(roomId);
+    console.log('room-create: room data는 ', roomData);
+    console.log('user-joined: ', playerId, '입장');
+    room.emit('user-joined', { playerId: playerId });
+
     if (numberOfPeopleInRoom >= 1) {
       room.emit('another-person-ready');
-      const creatorSocketId = this.roomCreatorSocketIdMap.get(roomId);
-      const creatorId = this.socketUserIdMap.get(creatorSocketId);
-      console.log('all-player-ready: creatorId, userId', creatorId, user._id.toString());
+      const creatorInfo: Player = this.roomManager.getCreatorInRoom(roomId);
 
-      console.log('creator is', creatorId, creatorSocketId);
+      const creatorSocketId = creatorInfo.socketId;
+      // const creatorId = creatorInfo.userId;
+      console.log('all-player-ready: creatorId, userId', creatorSocketId);
+
+      // console.log('creator is', creatorId, creatorSocketId);
       socket.to(creatorSocketId).emit('all-player-ready');
     }
 
-    if (numberOfPeopleInRoom > 2) {
+    if (numberOfPeopleInRoom > this.maxRoomMemberCount) {
       room.emit('too-many-people');
       return;
     }
@@ -180,15 +194,13 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     const roomSockets = await room.fetchSockets();
     const numberOfPeopleInRoom = roomSockets.length;
 
-    for (let i = 0; i < roomSockets.length; i++) {
-      const socket = roomSockets[i];
-      console.log(`sending start play room response to ${socket.id}, player ${i + 1}`);
-      socket.emit('start-play-room-response', {
-        coordinates: coordinates,
-        roomMemberCount: numberOfPeopleInRoom,
-        playerId: i + 1,
-      });
-    }
+    const roomData = this.roomManager.getRoomData(roomId);
+    console.log('start-play-room-response: room data는 ', roomData);
+
+    room.emit('start-play-room-response', {
+      coordinates: coordinates,
+      roomMemberCount: numberOfPeopleInRoom,
+    });
   }
 
   @SubscribeMessage('send-connection-offer')
@@ -197,9 +209,11 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     {
       offer,
       roomId,
+      playerId,
     }: {
       offer: RTCSessionDescriptionInit;
       roomId: string;
+      playerId: string;
     },
     @ConnectedSocket() socket: Socket,
   ): Promise<void> {
@@ -214,8 +228,8 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       return;
     }
     room.except(socket.id).emit('send-connection-offer', {
-      offer,
-      roomId,
+      fromPlayerId: playerId,
+      offer: offer,
     });
   }
 
@@ -223,9 +237,11 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   async handleSendConnectionAnswer(
     @MessageBody()
     {
+      playerId,
       answer,
       roomId,
     }: {
+      playerId: string;
       answer: RTCSessionDescriptionInit;
       roomId: string;
     },
@@ -241,7 +257,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       console.log('user not found');
       return;
     }
-    room.except(socket.id).emit('answer', { answer, roomId });
+    room.except(socket.id).emit('answer', { answer: answer, fromPlayerId: playerId });
   }
 
   @SubscribeMessage('send-candidate')
@@ -250,9 +266,11 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     {
       candidate,
       roomId,
+      playerId,
     }: {
       candidate: RTCIceCandidate;
       roomId: string;
+      playerId: string;
     },
     @ConnectedSocket() socket: Socket,
   ): Promise<void> {
@@ -266,7 +284,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       console.log('user not found');
       return;
     }
-    room.except(socket.id).emit('send-candidate', { candidate, roomId });
+    room.except(socket.id).emit('send-candidate', { candidate: candidate, fromPlayerId: playerId });
   }
 
   @SubscribeMessage('start-speech')
@@ -482,5 +500,15 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     room.emit('combined-result', {
       restaurantList: restaurantIdList,
     });
+  }
+
+  @SubscribeMessage('update-room-detail')
+  async handleUpdateRoomDetail(@MessageBody() data: any, @ConnectedSocket() soccket: Socket): Promise<void> {
+    console.log('handling update room detail', data);
+    const roomId = data.roomId;
+    const playerStreams = data.playerStreams;
+
+    const room = this.server.in(roomId);
+    room.emit('room-detail-updated', playerStreams);
   }
 }
