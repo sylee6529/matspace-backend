@@ -501,4 +501,14 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       restaurantList: restaurantIdList,
     });
   }
+
+  @SubscribeMessage('update-room-detail')
+  async handleUpdateRoomDetail(@MessageBody() data: any, @ConnectedSocket() soccket: Socket): Promise<void> {
+    console.log('handling update room detail', data);
+    const roomId = data.roomId;
+    const playerStreams = data.playerStreams;
+
+    const room = this.server.in(roomId);
+    room.emit('room-detail-updated', playerStreams);
+  }
 }
