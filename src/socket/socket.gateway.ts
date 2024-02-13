@@ -495,10 +495,65 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     const roomId = data.roomId;
     const userSelectedList = data.userSelectedList;
 
-    const restaurantIdList = [1, 2, 3];
+    const restaurantList = [
+      {
+        _id: '65ad3d685a419523bb358390',
+        name: '나폴리회관 강남역점',
+        rating: '4.29',
+        address: '서울 강남구 테헤란로5길 24 1층 나폴리회관',
+        thumbnailImg:
+          'https://ldb-phinf.pstatic.net/20171201_130/1512077160045QAw6H_JPEG/KakaoTalk_20170815_143826958.jpg',
+        phone_number: '02-538-5067',
+        options:
+          '예약,단체 이용 가능,주차,포장,무선 인터넷,남/녀 화장실 구분,제로페이,지역화폐 (카드형),지역화폐 (모바일형),배달,장애인 편의시설',
+        moodKeywords: ['시끌벅적한', '고급스러운', '조용한', '깔끔한'],
+        isDelivery: false,
+        isTakeOut: false,
+        images: [
+          'https://ldb-phinf.pstatic.net/20171201_130/1512077160045QAw6H_JPEG/KakaoTalk_20170815_143826958.jpg',
+          'https://ldb-phinf.pstatic.net/20200123_169/1579767513055YC1QV_JPEG/image.jpg',
+        ],
+        ratingCount: '2,909',
+        food_category: '이탈리안',
+      },
+      {
+        _id: '65ad3d685a419523bb358392',
+        name: '청담이상 강남역점',
+        rating: null,
+        address: '서울 강남구 테헤란로1길 42 2층, 3층',
+        thumbnailImg: 'https://ldb-phinf.pstatic.net/20200415_168/1586880072340Kkxru_JPEG/sCPYBc7QptWVucAU2FLURD-T.jpg',
+        phone_number: '0507-1310-0027',
+        options: '단체 이용 가능,예약,남/녀 화장실 구분,무선 인터넷',
+        isDelivery: false,
+        isTakeOut: false,
+        images: [
+          'https://ldb-phinf.pstatic.net/20200415_168/1586880072340Kkxru_JPEG/sCPYBc7QptWVucAU2FLURD-T.jpg',
+          'https://ldb-phinf.pstatic.net/20200121_289/15795861605699d0Kq_JPEG/kiJ8lxfoIupdVhcVShnDO15q.jpg',
+        ],
+        ratingCount: '691',
+        food_category: '바/주점',
+      },
+      {
+        _id: '65ad3d685a419523bb358394',
+        name: '감성타코 강남역점',
+        rating: '4.41',
+        address: '서울 강남구 강남대로 406 지하1층 감성타코',
+        thumbnailImg: 'https://ldb-phinf.pstatic.net/20180922_193/1537615738091CBjnF_JPEG/QoaVnhp1U1McLCJ3gcFaHa6s.jpg',
+        phone_number: '02-565-8830',
+        options: '무선 인터넷,남/녀 화장실 구분,포장,단체 이용 가능,제로페이,예약',
+        isDelivery: false,
+        isTakeOut: true,
+        images: [
+          'https://ldb-phinf.pstatic.net/20180922_193/1537615738091CBjnF_JPEG/QoaVnhp1U1McLCJ3gcFaHa6s.jpg',
+          'https://ldb-phinf.pstatic.net/20180922_60/1537615683256mBdbr_JPEG/vbmuzz0SH1o37i9AMjxnyblO.jpg',
+        ],
+        ratingCount: '2,763',
+        food_category: '중남미식',
+      },
+    ];
     const room = this.server.in(roomId);
     room.emit('combined-result', {
-      restaurantList: restaurantIdList,
+      restaurantList: restaurantList,
     });
   }
 
