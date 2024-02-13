@@ -1,10 +1,31 @@
-import { Controller, Get, HttpStatus, Query, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Post, Query, Res, UseGuards } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
+import { PostRestaurantsRequestDto } from './dto/post.restaurants.request.dto';
+import { GetUserId } from 'src/util/decorator/get-user.decorator';
+import { RestaurantsService } from './restaurants.service';
+import { PostRestaurantsResponseDto } from './dto/post.restaurants.response.dto';
 
 @ApiTags('식당 API')
 @Controller('api/restaurants')
 export class RestaurantsController {
+  constructor(private readonly restaurantsService: RestaurantsService) {}
+
+  @Post('')
+  @ApiOperation({
+    summary: 'Get Restaurants by keywords API',
+    description: '교집합 추천 식당 리스트를 받을 수 있습니다.',
+  })
+  @ApiCreatedResponse({ description: '교집합 추천 식당 리스트 조회 완료.' })
+  @UseGuards()
+  async getRestaurants(
+    @GetUserId() userId,
+    @Query() roomId: string,
+    @Body() requestDto: PostRestaurantsRequestDto,
+  ): Promise<PostRestaurantsResponseDto> {
+    return this.restaurantsService.getRestaurants(userId, roomId, requestDto.coordinates);
+  }
+
   @Get('/keywords')
   @ApiOperation({
     summary: 'Get Restaurants by keywords API',
