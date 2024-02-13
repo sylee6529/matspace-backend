@@ -495,10 +495,172 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     const roomId = data.roomId;
     const userSelectedList = data.userSelectedList;
 
-    const restaurantIdList = [1, 2, 3];
+    const restaurantList = [
+      {
+        _id: '65ad3d685a419523bb358390',
+        name: '나폴리회관 강남역점',
+        rating: '4.29',
+        address: '서울 강남구 테헤란로5길 24 1층 나폴리회관',
+        thumbnailImg:
+          'https://ldb-phinf.pstatic.net/20171201_130/1512077160045QAw6H_JPEG/KakaoTalk_20170815_143826958.jpg',
+        phone_number: '02-538-5067',
+        options:
+          '예약,단체 이용 가능,주차,포장,무선 인터넷,남/녀 화장실 구분,제로페이,지역화폐 (카드형),지역화폐 (모바일형),배달,장애인 편의시설',
+        moodKeywords: ['시끌벅적한', '고급스러운', '조용한', '깔끔한'],
+        isDelivery: false,
+        isTakeOut: false,
+        images: [
+          'https://ldb-phinf.pstatic.net/20171201_130/1512077160045QAw6H_JPEG/KakaoTalk_20170815_143826958.jpg',
+          'https://ldb-phinf.pstatic.net/20200123_169/1579767513055YC1QV_JPEG/image.jpg',
+        ],
+        ratingCount: '2,909',
+        food_category: '이탈리안',
+      },
+      {
+        _id: '65ad3d685a419523bb358392',
+        name: '청담이상 강남역점',
+        rating: null,
+        address: '서울 강남구 테헤란로1길 42 2층, 3층',
+        thumbnailImg: 'https://ldb-phinf.pstatic.net/20200415_168/1586880072340Kkxru_JPEG/sCPYBc7QptWVucAU2FLURD-T.jpg',
+        phone_number: '0507-1310-0027',
+        options: '단체 이용 가능,예약,남/녀 화장실 구분,무선 인터넷',
+        isDelivery: false,
+        isTakeOut: false,
+        images: [
+          'https://ldb-phinf.pstatic.net/20200415_168/1586880072340Kkxru_JPEG/sCPYBc7QptWVucAU2FLURD-T.jpg',
+          'https://ldb-phinf.pstatic.net/20200121_289/15795861605699d0Kq_JPEG/kiJ8lxfoIupdVhcVShnDO15q.jpg',
+        ],
+        ratingCount: '691',
+        food_category: '바/주점',
+      },
+      {
+        _id: '65ad3d685a419523bb358394',
+        name: '감성타코 강남역점',
+        rating: '4.41',
+        address: '서울 강남구 강남대로 406 지하1층 감성타코',
+        thumbnailImg: 'https://ldb-phinf.pstatic.net/20180922_193/1537615738091CBjnF_JPEG/QoaVnhp1U1McLCJ3gcFaHa6s.jpg',
+        phone_number: '02-565-8830',
+        options: '무선 인터넷,남/녀 화장실 구분,포장,단체 이용 가능,제로페이,예약',
+        isDelivery: false,
+        isTakeOut: true,
+        images: [
+          'https://ldb-phinf.pstatic.net/20180922_193/1537615738091CBjnF_JPEG/QoaVnhp1U1McLCJ3gcFaHa6s.jpg',
+          'https://ldb-phinf.pstatic.net/20180922_60/1537615683256mBdbr_JPEG/vbmuzz0SH1o37i9AMjxnyblO.jpg',
+        ],
+        ratingCount: '2,763',
+        food_category: '중남미식',
+      },
+      {
+        _id: '65ad3d685a419523bb358396',
+        name: '봉게짬뽕 강남역본점',
+        rating: '4.47',
+        address: '서울 강남구 봉은사로6길 23 지하1층1호 봉게짬뽕',
+        thumbnailImg:
+          'https://ldb-phinf.pstatic.net/20231229_130/17038430182646E1ow_PNG/%BA%C0%B0%D4%C2%AB%BB%CD_%B0%A3%C6%C7.png',
+        phone_number: '02-562-1312',
+        options: '포장,배달,단체 이용 가능,무선 인터넷,남/녀 화장실 구분',
+        isDelivery: false,
+        isTakeOut: null,
+        images: [
+          'https://ldb-phinf.pstatic.net/20231229_130/17038430182646E1ow_PNG/%BA%C0%B0%D4%C2%AB%BB%CD_%B0%A3%C6%C7.png',
+          'https://ldb-phinf.pstatic.net/20201013_41/1602581373508qX8cJ_JPEG/5_tIKGjRC3fNVR1XE6mRcvvt.jpg',
+        ],
+        ratingCount: '741',
+        food_category: '중식당',
+      },
+      {
+        _id: '65ad3d685a419523bb358397',
+        name: '대진도원참치 강남역점',
+        rating: null,
+        address: '서울 강남구 테헤란로 113 목화밀라트 지하1층 제비101호',
+        thumbnailImg:
+          'https://ldb-phinf.pstatic.net/20231129_71/1701240749789qu0wD_JPEG/KakaoTalk_20231129_153814033.jpg',
+        phone_number: '0507-1473-4588',
+        options: '단체 이용 가능,포장,배달,무선 인터넷,예약,남/녀 화장실 구분,간편결제,주차',
+        isDelivery: false,
+        isTakeOut: false,
+        images: [
+          'https://ldb-phinf.pstatic.net/20231129_71/1701240749789qu0wD_JPEG/KakaoTalk_20231129_153814033.jpg',
+          'https://ldb-phinf.pstatic.net/20231129_223/17012407497921nIa5_JPEG/KakaoTalk_20231129_153814033_01.jpg',
+        ],
+        ratingCount: '1,084',
+        food_category: '일식',
+      },
+      {
+        _id: '65ad3d685a419523bb358398',
+        name: '용용선생 강남역점',
+        rating: '4.59',
+        address: '서울 강남구 강남대로96길 17',
+        thumbnailImg: 'https://ldb-phinf.pstatic.net/20210514_96/1620998063798C0gw1_JPEG/T3GoqH4S5qTmBrVKmGinO_0g.jpg',
+        phone_number: '0507-1395-5369',
+        options: '단체 이용 가능,무선 인터넷,포장,남/녀 화장실 구분',
+        isDelivery: false,
+        isTakeOut: null,
+        images: [
+          'https://ldb-phinf.pstatic.net/20210514_96/1620998063798C0gw1_JPEG/T3GoqH4S5qTmBrVKmGinO_0g.jpg',
+          'https://ldb-phinf.pstatic.net/20210423_281/1619151050819qOjSD_JPEG/uD32c6oXJex8xmbTsulab2rf.jpg',
+        ],
+        ratingCount: '794',
+        food_category: '바/주점',
+      },
+      {
+        _id: '65ad3d685a419523bb358399',
+        name: '60년전통신촌황소곱창 강남역직영점',
+        rating: '4.6',
+        address: '서울 강남구 강남대로100길 13',
+        thumbnailImg: 'https://ldb-phinf.pstatic.net/20180320_73/1521506964448bvTI4_JPEG/B_3FLWTJAo4HftEwbW9WayLe.jpg',
+        phone_number: '0507-1303-2640',
+        options: '예약,단체 이용 가능,주차,포장,남/녀 화장실 구분',
+        isDelivery: false,
+        isTakeOut: false,
+        images: [
+          'https://ldb-phinf.pstatic.net/20180320_73/1521506964448bvTI4_JPEG/B_3FLWTJAo4HftEwbW9WayLe.jpg',
+          'https://ldb-phinf.pstatic.net/20211023_83/1634915226218XBv6H_JPEG/uULoC16sDzzSGaTc-lc-EUvJ.jpg',
+        ],
+        ratingCount: '1,432',
+        food_category: '곱창,막창,양',
+      },
+      {
+        _id: '65ad3d685a419523bb35839a',
+        name: '칙바이칙 강남역점',
+        rating: null,
+        address: '서울 강남구 강남대로94길 15 S2빌딩 1층',
+        thumbnailImg:
+          'https://ldb-phinf.pstatic.net/20231023_268/16980491888168mbTk_JPEG/394288896_17882628536952680_2522975935422164637_n.jpg',
+        phone_number: '0507-1430-6155',
+        options:
+          '단체 이용 가능,포장,배달,예약,무선 인터넷,남/녀 화장실 구분,장애인 편의시설,주차,지역화폐 (모바일형),제로페이',
+        isDelivery: true,
+        isTakeOut: false,
+        images: [
+          'https://ldb-phinf.pstatic.net/20231023_268/16980491888168mbTk_JPEG/394288896_17882628536952680_2522975935422164637_n.jpg',
+          'https://ldb-phinf.pstatic.net/20231023_23/1698049201054uzYRF_JPEG/394261441_17882628488952680_8274746341099006090_n.jpg',
+        ],
+        ratingCount: '1,554',
+        food_category: '미국식',
+      },
+      {
+        _id: '65ad3d685a419523bb35839b',
+        name: '브릭샌드 강남역점',
+        rating: null,
+        address: '서울 강남구 강남대로 396 강남역 신분당선 지하1층',
+        thumbnailImg:
+          'https://ldb-phinf.pstatic.net/20230606_210/1685979656356KdDa9_JPEG/KakaoTalk_20221202_155624541_03.jpg',
+        phone_number: '0507-1316-9673',
+        options: null,
+        isDelivery: false,
+        isTakeOut: null,
+        images: [
+          'https://ldb-phinf.pstatic.net/20230606_210/1685979656356KdDa9_JPEG/KakaoTalk_20221202_155624541_03.jpg',
+          'https://ldb-phinf.pstatic.net/20230606_25/16859796250161zjew_JPEG/KakaoTalk_20221014_000131893.jpg',
+        ],
+        ratingCount: '934',
+        food_category: '디저트/카페',
+      },
+    ];
     const room = this.server.in(roomId);
     room.emit('combined-result', {
-      restaurantList: restaurantIdList,
+      restaurantList: restaurantList,
     });
   }
 

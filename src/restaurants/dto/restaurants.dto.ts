@@ -18,7 +18,7 @@ export class RestaurantsDto {
 
   options: string;
 
-  moodeKeywords: string[];
+  moodKeywords: string[];
 
   isDelivery: boolean | null;
 
@@ -39,7 +39,7 @@ export class RestaurantsDto {
     this.thumbnailImg = data.thumbnailImg;
     this.phoneNumber = data.phone_number;
     this.options = data.options;
-    this.moodeKeywords = data.moodeKeywords;
+    this.moodKeywords = data.moodKeywords;
     this.isDelivery = data.isDelivery;
     this.isTakeOut = data.isTakeOut;
     this.images = data.images;
