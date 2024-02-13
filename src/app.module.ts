@@ -11,6 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import { KeywordsModule } from './keywords/keywords.module';
 import { RestaurantsModule } from './restaurants/restaurants.module';
 import { FoodcategoriesModule } from './foodcategories/foodcategories.module';
+import { ImagesModule } from './images/images.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { FoodcategoriesModule } from './foodcategories/foodcategories.module';
     KeywordsModule,
     RestaurantsModule,
     FoodcategoriesModule,
+    ImagesModule,
   ],
   controllers: [AppController],
   providers: [AppService, AuthService],

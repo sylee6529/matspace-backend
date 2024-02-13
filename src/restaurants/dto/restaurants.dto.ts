@@ -1,0 +1,49 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { Expose, Transform } from 'class-transformer';
+
+export class RestaurantsDto {
+  @Expose({ name: '_id' })
+  id: string;
+
+  name: string;
+
+  rating: string;
+
+  address: string;
+
+  thumbnailImg: string;
+
+  @Expose({ name: 'phone_number' })
+  phoneNumber: string;
+
+  options: string;
+
+  moodeKeywords: string[];
+
+  isDelivery: boolean | null;
+
+  isTakeOut: boolean | null;
+
+  images: string[];
+
+  ratingCount: string;
+
+  @Expose({ name: 'food_category' })
+  foodCategory: string | string[];
+
+  constructor(restaurantId: string, data: any) {
+    this.id = restaurantId;
+    this.name = data.name;
+    this.rating = data.rating;
+    this.address = data.address;
+    this.thumbnailImg = data.thumbnailImg;
+    this.phoneNumber = data.phone_number;
+    this.options = data.options;
+    this.moodeKeywords = data.moodeKeywords;
+    this.isDelivery = data.isDelivery;
+    this.isTakeOut = data.isTakeOut;
+    this.images = data.images;
+    this.ratingCount = data.ratingCount;
+    this.foodCategory = data.food_category;
+  }
+}
