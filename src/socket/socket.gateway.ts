@@ -515,6 +515,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         ],
         ratingCount: '2,909',
         food_category: '이탈리안',
+        likes: 0,
       },
       {
         _id: '65ad3d685a419523bb358392',
@@ -532,6 +533,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         ],
         ratingCount: '691',
         food_category: '바/주점',
+        likes: 0,
       },
       {
         _id: '65ad3d685a419523bb358394',
@@ -549,6 +551,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         ],
         ratingCount: '2,763',
         food_category: '중남미식',
+        likes: 0,
       },
       {
         _id: '65ad3d685a419523bb358396',
@@ -567,6 +570,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         ],
         ratingCount: '741',
         food_category: '중식당',
+        likes: 0,
       },
       {
         _id: '65ad3d685a419523bb358397',
@@ -585,6 +589,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         ],
         ratingCount: '1,084',
         food_category: '일식',
+        likes: 0,
       },
       {
         _id: '65ad3d685a419523bb358398',
@@ -602,6 +607,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         ],
         ratingCount: '794',
         food_category: '바/주점',
+        likes: 0,
       },
       {
         _id: '65ad3d685a419523bb358399',
@@ -619,6 +625,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         ],
         ratingCount: '1,432',
         food_category: '곱창,막창,양',
+        likes: 0,
       },
       {
         _id: '65ad3d685a419523bb35839a',
@@ -638,6 +645,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         ],
         ratingCount: '1,554',
         food_category: '미국식',
+        likes: 0,
       },
       {
         _id: '65ad3d685a419523bb35839b',
@@ -656,6 +664,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         ],
         ratingCount: '934',
         food_category: '디저트/카페',
+        likes: 0,
       },
     ];
     const room = this.server.in(roomId);
