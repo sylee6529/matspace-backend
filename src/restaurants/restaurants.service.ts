@@ -41,7 +41,6 @@ export class RestaurantsService {
 
     let images = await this.imagesService.getAllImages();
     const imgUrls = images.map((image) => new ImagesDto(image));
-    console.log(imgUrls);
 
     return new PostRestaurantsResponseDto(restaurantList, imgUrls);
   }
