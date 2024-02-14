@@ -24,6 +24,9 @@ export class Restaurant {
   options: string;
 
   @Prop()
+  moodKeywords: string[];
+
+  @Prop()
   isDelivery: boolean;
 
   @Prop()
@@ -37,6 +40,9 @@ export class Restaurant {
 
   @Prop()
   food_category: string;
+
+  @Prop()
+  foodCategories: string;
 }
 
 export const RestaurantSchema = SchemaFactory.createForClass(Restaurant);

@@ -9,12 +9,15 @@ export class RestaurantSimpleDto {
 
   foodCategory: string | string[];
 
+  foodCategories: string;
+
   menus: string[];
 
   constructor(data: RestaurantDto) {
     this.id = data.id;
     this.moodKeywords = data.moodKeywords;
     this.foodCategory = data.foodCategory;
+    this.foodCategories = data.foodCategories;
     this.menus = data.menus;
   }
 }
