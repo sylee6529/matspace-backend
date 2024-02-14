@@ -36,7 +36,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
   onModuleInit() {
     this.logger.log('모듈 시작');
-    this.socketService.setSocketServerInstance(this.server);
+    // this.socketService.setSocketServerInstance(this.server);
   }
 
   afterInit(server: any) {
@@ -44,7 +44,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   handleDisconnect(socket: Socket) {
-    this.disconnect(socket, null);
+    // this.socketService.removeConnectedUser(socket.id);
     this.logger.log(`Client Disconnected : ${socket.id}`);
   }
 
@@ -62,6 +62,8 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       }
 
       const userId = user._id.toString();
+      // this.socketService.addNewConnectedUser(socket.id, userId);
+
       console.log('user connected:', userId);
     } catch (error) {
       console.log('disconnect user in handle connect', error);
@@ -70,8 +72,8 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   @SubscribeMessage('disconnect')
-  disconnect(socket: Socket, data: any): void {
-    console.log('handling disconnect event', data);
+  disconnect(@ConnectedSocket() socket: Socket, data: any): void {
+    console.log('handling disconnect event', socket.id, 'exit');
     socket.disconnect(true);
   }
 
@@ -79,21 +81,19 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   handleRoomLeave(socket: Socket, data: any): void {
     const { roomId } = data;
 
-    const activeRoom = this.socketService.getActiveRoom(roomId);
+    // const activeRoom = this.socketService.getActiveRoom(roomId);
 
-    if (activeRoom) {
-      this.socketService.leaveActiveRoom(roomId, socket.id);
-
-      const updatedActiveRoom = this.socketService.getActiveRoom(roomId);
-
-      if (updatedActiveRoom) {
-        updatedActiveRoom.participants.forEach((participant) => {
-          socket.to(participant.socketId).emit('room-participant-left', {
-            connUserSocketId: socket.id,
-          });
-        });
-      }
-    }
+    // if (activeRoom) {
+    //   // this.socketService.leaveActiveRoom(roomId, socket.id);
+    //   // const updatedActiveRoom = this.socketService.getActiveRoom(roomId);
+    //   // if (updatedActiveRoom) {
+    //   //   updatedActiveRoom.participants.forEach((participant) => {
+    //   //     socket.to(participant.socketId).emit('room-participant-left', {
+    //   //       connUserSocketId: socket.id,
+    //   //     });
+    //   //   });
+    //   // }
+    // }
   }
 
   @SubscribeMessage('create-room')
@@ -107,8 +107,8 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       return;
     }
 
-    const roomDetails = this.socketService.addNewActiveRoom(user._id.toString(), socket.id);
-    const roomId = roomDetails.roomId;
+    // const roomDetails = this.socketService.addNewActiveRoom(user._id.toString(), socket.id);
+    const roomId = uuidv4();
 
     socket.join(roomId);
 
@@ -121,7 +121,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
     socket.emit('create-room-response', {
       roomId: roomId,
-      playerId: creatorPlayerId,
+      socketId: user._id.toString(),
     });
   }
 
@@ -139,7 +139,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     const playerId = this.roomManager.addPlayerToRoom(roomId, socket.id, userId);
 
     console.log('user joined room', roomId, userId);
-    socket.emit('join-room-response', { roomId: roomId, playerId: playerId });
+    socket.emit('join-room-response', { roomId: roomId, socketId: socket.id });
 
     const room = this.server.in(roomId);
     const roomSockets = await room.fetchSockets();
@@ -155,7 +155,16 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     const roomData = this.roomManager.getRoomData(roomId);
     console.log('room-create: room data는 ', roomData);
     console.log('user-joined: ', playerId, '입장');
-    room.emit('user-joined', { playerId: playerId });
+
+    const players = this.roomManager.getPlayersInRoom(roomId);
+
+    for (let player of players) {
+      socket.emit('user-joined', { socketId: socket.id });
+    }
+    room.emit('user-joined', { socketId: socket.id });
+
+    socket.emit('all-users', players);
+    console.log('all-users: ', players, 'from ', userId);
 
     if (numberOfPeopleInRoom >= 1) {
       room.emit('another-person-ready');
@@ -207,18 +216,19 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   async handleSendConnectionOffer(
     @MessageBody()
     {
-      offer,
-      roomId,
-      playerId,
+      sdp,
+      offerSendID,
+      offerReceiveID,
     }: {
-      offer: RTCSessionDescriptionInit;
+      sdp: RTCSessionDescriptionInit;
       roomId: string;
-      playerId: string;
+      offerSendID: string;
+      offerReceiveID: string;
     },
     @ConnectedSocket() socket: Socket,
   ): Promise<void> {
     console.log('handling send connection offer event');
-    const room = this.server.in(roomId);
+    // const room = this.server.in(roomId);
     const token = socket.handshake.auth?.token;
     const payload = await this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
     const user = await this.authService.validate(payload.sub);
@@ -227,9 +237,11 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       console.log('user not found');
       return;
     }
-    room.except(socket.id).emit('send-connection-offer', {
-      fromPlayerId: playerId,
-      offer: offer,
+
+    console.log('send-connection-offer: ', offerSendID, 'to', offerReceiveID);
+    this.server.to(offerReceiveID).emit('send-connection-offer', {
+      sdp: sdp,
+      offerSendID: offerSendID,
     });
   }
 
@@ -237,18 +249,19 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   async handleSendConnectionAnswer(
     @MessageBody()
     {
-      playerId,
-      answer,
-      roomId,
+      sdp,
+      answerReceiveID,
+      answerSendID,
     }: {
-      playerId: string;
-      answer: RTCSessionDescriptionInit;
+      sdp: RTCSessionDescriptionInit;
+      answerReceiveID: string;
+      answerSendID: string;
       roomId: string;
     },
     @ConnectedSocket() socket: Socket,
   ): Promise<void> {
     console.log('handling send connection answer event');
-    const room = this.server.in(roomId);
+    // const room = this.server.in(roomId);
     const token = socket.handshake.auth?.token;
     const payload = await this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
     const user = await this.authService.validate(payload.sub);
@@ -257,7 +270,12 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       console.log('user not found');
       return;
     }
-    room.except(socket.id).emit('answer', { answer: answer, fromPlayerId: playerId });
+
+    console.log('answer: ', answerSendID, 'to', answerReceiveID);
+    this.server.to(answerReceiveID).emit('answer', {
+      sdp: sdp,
+      answerSendID: answerSendID,
+    });
   }
 
   @SubscribeMessage('send-candidate')
@@ -265,17 +283,18 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     @MessageBody()
     {
       candidate,
-      roomId,
-      playerId,
+      candidateReceiveID,
+      candidateSendID,
     }: {
       candidate: RTCIceCandidate;
       roomId: string;
-      playerId: string;
+      candidateReceiveID: string;
+      candidateSendID: string;
     },
     @ConnectedSocket() socket: Socket,
   ): Promise<void> {
     console.log('handling send ice candidate event');
-    const room = this.server.in(roomId);
+    // const room = this.server.in(roomId);
     const token = socket.handshake.auth?.token;
     const payload = await this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
     const user = await this.authService.validate(payload.sub);
@@ -284,7 +303,12 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       console.log('user not found');
       return;
     }
-    room.except(socket.id).emit('send-candidate', { candidate: candidate, fromPlayerId: playerId });
+
+    console.log('send-candidate: ', candidateSendID, 'to', candidateReceiveID);
+    this.server.to(candidateReceiveID).emit('send-candidate', {
+      candidate: candidate,
+      candidateSendID: candidateSendID,
+    });
   }
 
   @SubscribeMessage('start-speech')
@@ -470,7 +494,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   async handleUserSelectedCard(@MessageBody() data: any, @ConnectedSocket() socket: Socket): Promise<void> {
     console.log('handling user selected card event', data);
     const roomId = data.roomId;
-    const playerId = data.playerId;
+    const socketId = data.socketId;
     const restaurantData = data.restaurantData;
 
     const room = this.server.in(roomId);
@@ -484,7 +508,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     }
 
     room.emit('other-user-selected-card', {
-      playerId: playerId,
+      socketId: socket.id,
       restaurantData: restaurantData,
     });
   }
@@ -515,6 +539,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         ],
         ratingCount: '2,909',
         food_category: '이탈리안',
+        likes: 0,
       },
       {
         _id: '65ad3d685a419523bb358392',
@@ -532,6 +557,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         ],
         ratingCount: '691',
         food_category: '바/주점',
+        likes: 0,
       },
       {
         _id: '65ad3d685a419523bb358394',
@@ -549,6 +575,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         ],
         ratingCount: '2,763',
         food_category: '중남미식',
+        likes: 0,
       },
       {
         _id: '65ad3d685a419523bb358396',
@@ -567,6 +594,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         ],
         ratingCount: '741',
         food_category: '중식당',
+        likes: 0,
       },
       {
         _id: '65ad3d685a419523bb358397',
@@ -585,6 +613,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         ],
         ratingCount: '1,084',
         food_category: '일식',
+        likes: 0,
       },
       {
         _id: '65ad3d685a419523bb358398',
@@ -602,6 +631,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         ],
         ratingCount: '794',
         food_category: '바/주점',
+        likes: 0,
       },
       {
         _id: '65ad3d685a419523bb358399',
@@ -619,6 +649,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         ],
         ratingCount: '1,432',
         food_category: '곱창,막창,양',
+        likes: 0,
       },
       {
         _id: '65ad3d685a419523bb35839a',
@@ -638,6 +669,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         ],
         ratingCount: '1,554',
         food_category: '미국식',
+        likes: 0,
       },
       {
         _id: '65ad3d685a419523bb35839b',
@@ -656,6 +688,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
         ],
         ratingCount: '934',
         food_category: '디저트/카페',
+        likes: 0,
       },
     ];
     const room = this.server.in(roomId);
