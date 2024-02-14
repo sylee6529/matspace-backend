@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
 
-export class RestaurantsDto {
+export class RestaurantDto {
   @Expose({ name: '_id' })
   id: string;
 
@@ -10,6 +10,8 @@ export class RestaurantsDto {
   rating: string;
 
   address: string;
+
+  menus: string[];
 
   thumbnailImg: string;
 
@@ -36,6 +38,7 @@ export class RestaurantsDto {
     this.name = data.name;
     this.rating = data.rating;
     this.address = data.address;
+    this.menus = data.menus;
     this.thumbnailImg = data.thumbnailImg;
     this.phoneNumber = data.phone_number;
     this.options = data.options;
