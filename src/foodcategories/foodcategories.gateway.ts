@@ -12,8 +12,7 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Server } from 'http';
-import { Socket } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
 
 @WebSocketGateway()
@@ -90,14 +89,34 @@ export class FoodcategoriesGateway implements OnGatewayInit, OnGatewayConnection
       return;
     }
 
+    const room = this.server.in(roomId);
     this.httpService
       .post(`${this.baseUrl}/foodcategories/speech`, {
         userId: userId,
         sentence: speechSentence,
       })
       .subscribe((response) => {
-        console.log('응답 옴', response.data);
-        socket.emit('receive-speech-foodCategory', { userId: userId, foodCategories: response.data.words });
+        // console.log('응답 옴', response.data);
+        room.emit('receive-speech-foodCategory', { userId: userId, foodCategories: response.data.words });
       });
+  }
+
+  @SubscribeMessage('select-foodCategories')
+  async handleSelectFoodCategories(@ConnectedSocket() socket: any, @MessageBody() data: any) {
+    console.log('select-foodCategories', data);
+    const roomId = data.roomId;
+    const resultList = data.resultList;
+
+    const token = socket.handshake.auth?.token;
+    const payload = await this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
+    const user = await this.authService.validate(payload.sub);
+    const userId = user._id.toString();
+    if (!user) {
+      console.log('user not found');
+      return;
+    }
+
+    const room = this.server.in(roomId);
+    room.emit('select-foodCategories', resultList);
   }
 }
