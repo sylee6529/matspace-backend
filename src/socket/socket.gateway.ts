@@ -46,6 +46,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   handleDisconnect(socket: Socket) {
     // this.socketService.removeConnectedUser(socket.id);
     this.logger.log(`Client Disconnected : ${socket.id}`);
+    socket.disconnect(true);
   }
 
   async handleConnection(@ConnectedSocket() socket: Socket, ...args: any[]) {
@@ -154,14 +155,14 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
     const roomData = this.roomManager.getRoomData(roomId);
     console.log('room-create: room data는 ', roomData);
-    console.log('user-joined: ', playerId, '입장');
+    // console.log('user-joined: ', playerId, '입장');
 
     const players = this.roomManager.getPlayersInRoom(roomId);
 
-    for (let player of players) {
-      socket.emit('user-joined', { socketId: socket.id });
-    }
-    room.emit('user-joined', { socketId: socket.id });
+    // for (let player of players) {
+    //   socket.emit('user-joined', { socketId: socket.id });
+    // }
+    // room.emit('user-joined', { socketId: socket.id });
 
     socket.emit('all-users', players);
     console.log('all-users: ', players, 'from ', userId);
@@ -356,28 +357,6 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     }
 
     room.emit('mode-change-response', { roomReadyCount, newMode });
-  }
-
-  @SubscribeMessage('send-speech-foodCategory')
-  async handleSendSpeechFoodCategory(@MessageBody() data: any, @ConnectedSocket() socket: Socket): Promise<void> {
-    console.log('handling send speech food category event', data);
-    const speechSentence = data.speechSentence;
-    const roomId = data.roomId;
-    const foodCategories = ['한식', '중식', '일식']; // TODO: Fastapi로 request를 보내고, 받은 response를 다시 client에게 socket으로 보내기
-
-    const room = this.server.in(roomId);
-    const token = socket.handshake.auth?.token;
-    const payload = await this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
-    const user = await this.authService.validate(payload.sub);
-
-    if (!user) {
-      console.log('user not found');
-      return;
-    }
-    room.emit('receive-speech-foodCategory', {
-      userId: user._id.toString(),
-      foodCategories,
-    });
   }
 
   @SubscribeMessage('send-speech-keyword')
@@ -695,15 +674,5 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     room.emit('combined-result', {
       restaurantList: restaurantList,
     });
-  }
-
-  @SubscribeMessage('update-room-detail')
-  async handleUpdateRoomDetail(@MessageBody() data: any, @ConnectedSocket() soccket: Socket): Promise<void> {
-    console.log('handling update room detail', data);
-    const roomId = data.roomId;
-    const playerStreams = data.playerStreams;
-
-    const room = this.server.in(roomId);
-    room.emit('room-detail-updated', playerStreams);
   }
 }
