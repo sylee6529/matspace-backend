@@ -21,10 +21,10 @@ export class RestaurantsController {
   @UseGuards()
   async postRestaurants(
     @GetUserId() userId,
-    @Query() roomId: string,
+    @Query() room: { roomId: string },
     @Body() requestDto: PostRestaurantsRequestDto,
   ): Promise<PostRestaurantsResponseDto> {
-    return this.restaurantsService.getRestaurants(userId, roomId, requestDto.coordinates);
+    return this.restaurantsService.getRestaurants(userId, room.roomId, requestDto.coordinates);
   }
 
   @Get('')
@@ -33,7 +33,7 @@ export class RestaurantsController {
     description: '특정 방의 식당 리스트를 받을 수 있습니다.',
   })
   @ApiCreatedResponse({ description: '식당 리스트 조회 완료' })
-  async getRestaurants(@Query() roomId: string): Promise<GetRestaurantsResponseDto> {
-    return new GetRestaurantsResponseDto(roomId, await this.restaurantsService.getRestaurantData(roomId));
+  async getRestaurants(@Query() room: { roomId: string }): Promise<GetRestaurantsResponseDto> {
+    return new GetRestaurantsResponseDto(room.roomId, await this.restaurantsService.getRestaurantData(room.roomId));
   }
 }
