@@ -11,7 +11,7 @@ import {
 import { SocketService } from './socket.service';
 import { Inject, Logger, OnModuleInit, UseGuards, forwardRef } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
-import { interval } from 'rxjs';
+import { catchError, interval, throwError } from 'rxjs';
 import { Interval } from '@nestjs/schedule';
 import { User } from 'src/auth/user.schema';
 import { JwtService } from '@nestjs/jwt';
@@ -19,19 +19,27 @@ import { UserSocket } from './interface/user.handshake';
 import { AuthService } from 'src/auth/auth.service';
 import { v4 as uuidv4 } from 'uuid';
 import { RoomManager } from './room.manager';
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
+import { RestaurantsService } from 'src/restaurants/restaurants.service';
+import { RedisService } from 'src/util/redis/redis.service';
 
 @WebSocketGateway()
 export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {
   @WebSocketServer()
   server: Server;
+  private readonly baseUrl = this.configService.get<string>('FASTAPI_BACKEND_URL');
   private logger: Logger = new Logger('SocketGateway');
   private maxRoomMemberCount = 4;
 
   constructor(
-    private readonly socketService: SocketService,
     private readonly authService: AuthService,
     private readonly jwtService: JwtService,
     private readonly roomManager: RoomManager,
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
+    private readonly restaurantService: RestaurantsService,
+    private readonly redisService: RedisService,
   ) {}
 
   onModuleInit() {
@@ -204,12 +212,12 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     const roomSockets = await room.fetchSockets();
     const numberOfPeopleInRoom = roomSockets.length;
 
-    const roomData = this.roomManager.getRoomData(roomId);
-    console.log('start-play-room-response: room data는 ', roomData);
+    const players = this.roomManager.getPlayersInRoom(roomId);
 
     room.emit('start-play-room-response', {
       coordinates: coordinates,
       roomMemberCount: numberOfPeopleInRoom,
+      players: players,
     });
   }
 
@@ -391,15 +399,14 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     const token = socket.handshake.auth?.token;
     const payload = await this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
     const user = await this.authService.validate(payload.sub);
+    const userId = user._id.toString();
 
     if (!user) {
       console.log('user not found');
       return;
     }
 
-    room.emit('combine-result', {
-      restaurantList: restaurantIdList,
-    });
+    room.emit('combine-result', { restaurantList: restaurantIdList });
   }
 
   @SubscribeMessage('combine-select-result')
@@ -448,7 +455,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   async handleUserSelectedCard(@MessageBody() data: any, @ConnectedSocket() socket: Socket): Promise<void> {
     console.log('handling user selected card event', data);
     const roomId = data.roomId;
-    const socketId = data.socketId;
+    const playerId = data.playerId;
     const restaurantData = data.restaurantData;
 
     const room = this.server.in(roomId);
@@ -462,7 +469,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     }
 
     room.emit('other-user-selected-card', {
-      socketId: socket.id,
+      playerId: playerId,
       restaurantData: restaurantData,
     });
   }
@@ -473,6 +480,10 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     const roomId = data.roomId;
     const userSelectedList = data.userSelectedList;
 
+    const token = socket.handshake.auth?.token;
+    const payload = await this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
+    const user = await this.authService.validate(payload.sub);
+    const userId = user._id.toString();
     const restaurantList = [
       {
         _id: '65ad3d685a419523bb358390',
