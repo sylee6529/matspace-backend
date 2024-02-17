@@ -661,4 +661,29 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       restaurantList: restaurantList,
     });
   }
+
+  @SubscribeMessage('reset-combined-area')
+  async handleResetCombinedArea(@MessageBody() data: any, @ConnectedSocket() socket: Socket): Promise<void> {
+    console.log('handling reset combined area event', data);
+    const roomId = data.roomId;
+
+    const room = this.server.in(roomId);
+    room.emit('reset-combined-area');
+  }
+
+  @SubscribeMessage('right-sidebar-action')
+  async handleRightSidebarAction(@MessageBody() data: any, @ConnectedSocket() socket: Socket): Promise<void> {
+    console.log('handling right sidebar action event', data);
+    const roomId = data.roomId;
+    const action = data.action;
+    const restaurantData = data.restaurantData;
+
+    const room = this.server.in(roomId);
+    room.emit('right-sidebar-action', {
+      roomId: roomId,
+      action: action,
+      restaurantData: restaurantData,
+      socketId: socket.id,
+    });
+  }
 }
