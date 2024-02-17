@@ -10,16 +10,13 @@ import { Restaurant, RestaurantSchema } from './schema/restaurant.schema';
 import { ImagesModule } from 'src/images/images.module';
 import { RestaurantsGateway } from './restaurants.gateway';
 import { AuthModule } from 'src/auth/auth.module';
-import { RedisService } from 'src/util/redis/redis.service';
 import { AppModule } from 'src/app.module';
 
 @Module({
   imports: [
     forwardRef(() => AppModule),
     AuthModule,
-    HttpModule,
     ConfigModule.forRoot(),
-    SocketModule,
     HttpModule,
     ImagesModule,
     MongooseModule.forFeature([
@@ -31,5 +28,6 @@ import { AppModule } from 'src/app.module';
   ],
   controllers: [RestaurantsController],
   providers: [RestaurantsService, RestaurantsGateway],
+  exports: [RestaurantsService],
 })
 export class RestaurantsModule {}
