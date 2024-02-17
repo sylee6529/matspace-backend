@@ -27,7 +27,7 @@ export class RestaurantsController {
     return this.restaurantsService.getRestaurants(userId, room.roomId, requestDto.coordinates);
   }
 
-  @Get('')
+  @Get('/simple')
   @ApiOperation({
     summary: 'Get Restaurant object-simple list by keywords API',
     description: '특정 방의 식당 리스트를 받을 수 있습니다.',
