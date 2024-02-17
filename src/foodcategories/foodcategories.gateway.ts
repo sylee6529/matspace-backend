@@ -12,6 +12,7 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import { catchError, throwError } from 'rxjs';
 import { Server, Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
 
@@ -95,9 +96,15 @@ export class FoodcategoriesGateway implements OnGatewayInit, OnGatewayConnection
         userId: userId,
         sentence: speechSentence,
       })
+      .pipe(
+        catchError((error) => {
+          console.log('foodcategories speech api error', error);
+          return throwError(() => error);
+        }),
+      )
       .subscribe((response) => {
         // console.log('응답 옴', response.data);
-        room.emit('receive-speech-foodCategory', { userId: userId, foodCategories: response.data.words });
+        socket.emit('receive-speech-foodCategory', { userId: userId, foodCategories: response.data.words });
       });
   }
 
