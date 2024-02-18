@@ -129,6 +129,8 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       roomId: roomId,
       socketId: user._id.toString(),
     });
+
+    await this.restaurantService.saveRestaurants(user._id.toString(), roomId, coordinates);
   }
 
   @SubscribeMessage('join-room')
