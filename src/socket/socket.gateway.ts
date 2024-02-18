@@ -106,8 +106,10 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
   }
 
   @SubscribeMessage('create-room')
-  async handleRoomCreate(@MessageBody() data: string, @ConnectedSocket() socket: Socket): Promise<void> {
-    console.log('handling room create event');
+  async handleRoomCreate(@MessageBody() data: any, @ConnectedSocket() socket: Socket): Promise<void> {
+    console.log('handling room create event', data);
+    const coordinates = data.purposeCoordinate.map((coord) => parseFloat(coord));
+
     const token = socket.handshake.auth?.token;
     const payload = await this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
     const user = await this.authService.validate(payload.sub);
@@ -116,13 +118,8 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       return;
     }
 
-    // const roomDetails = this.socketService.addNewActiveRoom(user._id.toString(), socket.id);
     const roomId = uuidv4();
-
     socket.join(roomId);
-
-    // this.roomCreatorSocketIdMap.set(roomId, socket.id);
-    // this.socketUserIdMap.set(socket.id, user._id.toString());
     const creatorPlayerId = this.roomManager.addCreatorToRoom(roomId, socket.id, user._id.toString());
 
     const roomData = this.roomManager.getRoomData(roomId);
@@ -364,7 +361,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       newMode = null;
     }
 
-    room.emit('mode-change-response', { roomReadyCount, newMode });
+    room.emit('mode-change-response', { roomReadyCount, newMode, socketId: socket.id });
   }
 
   @SubscribeMessage('combine-try')
@@ -684,6 +681,18 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
       action: action,
       restaurantData: restaurantData,
       socketId: socket.id,
+    });
+  }
+
+  @SubscribeMessage('remove-selected-place')
+  async handleRemoveSelectedPlace(@MessageBody() data: any, @ConnectedSocket() socket: Socket): Promise<void> {
+    console.log('handling remove selected place event', data);
+    const roomId = data.roomId;
+    const restaurantToRemoveId = data.restaurantToRemoveId;
+
+    const room = this.server.in(roomId);
+    room.emit('remove-selected-place', {
+      restaurantToRemoveId: restaurantToRemoveId,
     });
   }
 }
