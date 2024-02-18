@@ -99,7 +99,7 @@ export class FoodcategoriesGateway implements OnGatewayInit, OnGatewayConnection
       .pipe(
         catchError((error) => {
           console.log('foodcategories speech api error', error);
-          return throwError(() => error);
+          return throwError(() => new Error('foodcategories speech 요청 실패'));
         }),
       )
       .subscribe((response) => {

@@ -12,6 +12,7 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import { catchError, firstValueFrom, throwError } from 'rxjs';
 import { Server, Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
 
@@ -89,26 +90,61 @@ export class KeywordsGateway implements OnGatewayInit, OnGatewayConnection, OnGa
       return;
     }
 
-    const restaurantList = [
-      '65ad3d685a419523bb358390',
-      '65ad3d685a419523bb358392',
-      '65ad3d685a419523bb358394',
-      '65ad3d685a419523bb358397',
-      '65ad3d685a419523bb358398',
-    ];
     const room = this.server.in(roomId);
-    this.httpService
-      .post(`${this.baseUrl}/keywords/mood/speech`, {
-        userId: userId,
-        sentence: speechSentence,
-      })
-      .subscribe((response) => {
-        // console.log('응답 옴', response.data.words);
-        room.emit('receive-speech-keyword', {
-          userId: userId,
-          keywords: response.data.words,
-          restaurantList: restaurantList,
+
+    try {
+      const speechResponse = await firstValueFrom(
+        this.httpService
+          .post(`${this.baseUrl}/keywords/mood/speech`, {
+            userId: userId,
+            sentence: speechSentence,
+          })
+          .pipe(
+            catchError((error) => {
+              console.log('send-speech-keyword error', error);
+              return throwError(() => new Error('mood speech 요청 실패'));
+            }),
+          ),
+      );
+
+      console.log('응답 옴 /keywords/mood/speech', speechResponse.data.words);
+
+      let uniqueMoods = speechResponse.data.words.reduce((acc, cur) => {
+        cur.top_5_moods.forEach((mood) => {
+          if (!acc.includes(mood)) {
+            acc.push(mood);
+          }
         });
+        return acc;
+      }, []);
+
+      console.log('uniqueMoods:::', uniqueMoods);
+
+      const restaurantResponse = await firstValueFrom(
+        this.httpService
+          .post(`${this.baseUrl}/restaurants/forone`, {
+            userId: userId,
+            roomId: roomId,
+            moodKeywords: uniqueMoods,
+            categories: selectedFoodCategories,
+          })
+          .pipe(
+            catchError((error) => {
+              console.log('send-speech-keyword error', error);
+              return throwError(() => new Error('forone 요청 실패'));
+            }),
+          ),
+      );
+
+      console.log('before receive-키워드 emit', restaurantResponse.data.restaurant_id_list);
+      room.emit('receive-speech-keyword', {
+        userId: userId,
+        keywords: uniqueMoods,
+        restaurantList: restaurantResponse.data.restaurant_id_list,
       });
+    } catch (error) {
+      console.log('API error', error);
+      throwError(() => error);
+    }
   }
 }
