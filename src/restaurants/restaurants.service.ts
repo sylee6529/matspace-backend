@@ -9,11 +9,11 @@ import { Model } from 'mongoose';
 import { plainToClass } from 'class-transformer';
 import { RestaurantDto } from './dto/restaurant.dto';
 import { ImagesService } from 'src/images/images.service';
-import { PostRestaurantsResponseDto } from './dto/post.restaurants.response.dto';
 import { ImagesDto } from './dto/images.dto';
 import { Redis } from 'ioredis';
 import { RestaurantSimpleDto } from './dto/restaurant.simple.dto';
 import { RedisService } from 'src/util/redis/redis.service';
+import { GetRestaurantsResponseDto } from './dto/get.restaurants.response.dto';
 
 @Injectable()
 export class RestaurantsService {
@@ -27,14 +27,25 @@ export class RestaurantsService {
     private readonly redisService: RedisService,
   ) {}
 
-  async getRestaurants(userId: string, roomId: string, coordinates: string[]) {
+  async getRestaurantDtos(restaurantIds: string[]) {
+    let restaurantList = [];
+    for (const restaurantId of restaurantIds) {
+      const restaurantInfo = await this.getRestaurantInfoById(restaurantId);
+
+      const restaurantDto = new RestaurantDto(restaurantId, restaurantInfo);
+      restaurantList.push(restaurantDto);
+    }
+    return restaurantList;
+  }
+
+  async saveRestaurants(userId: string, roomId: string, coordinates: number[]) {
     const withinonekResponse = this.httpService.post(`${this.baseUrl}/restaurants/withinonek`, {
       userId: userId,
       base_coords: coordinates,
     });
     const response = await lastValueFrom(withinonekResponse);
 
-    let restaurantList = [];
+    // let restaurantList = [];
     let restaurantSimpleList = [];
     for (const restaurantId of response.data.restaurant_id_list) {
       const restaurantInfo = await this.getRestaurantInfoById(restaurantId);
@@ -48,7 +59,7 @@ export class RestaurantsService {
 
       const restaurantDto = new RestaurantDto(restaurantId, restaurantInfo);
       const restaurantSimpleDto = new RestaurantSimpleDto(restaurantDto);
-      restaurantList.push(restaurantDto);
+      // restaurantList.push(restaurantDto);
       restaurantSimpleList.push(restaurantSimpleDto);
     }
 
@@ -57,10 +68,40 @@ export class RestaurantsService {
       console.log('저장 완료');
     });
 
+    return null;
+  }
+
+  async getRestaurantList(roomId: string, page: number) {
+    const perPage = 300;
+    const start = (page - 1) * perPage;
+    let end = start + perPage - 1;
+
+    const count = await this.redisService.getListItemCount(roomId);
+    const maxPage = Math.ceil(count / perPage);
+
+    console.log('start', start, 'end', end, 'page', page, 'count', count, 'maxPage', maxPage);
+
+    let restaurantSimpleList;
+    if (start >= count) {
+      // 시작 인덱스가 데이터 개수보다 크거나 같은 경우, 데이터가 없는 것이므로 빈 배열을 반환
+      restaurantSimpleList = [];
+    } else {
+      if (end >= count) {
+        // 끝 인덱스가 데이터 개수보다 큰 경우, 시작 인덱스부터 마지막 데이터까지만 가져옴
+        end = -1;
+      }
+      console.log('start', start, 'end', end);
+      restaurantSimpleList = await this.getRestaurantSimpleListByRange(roomId, start, end);
+    }
+
+    let restaurantIdList = restaurantSimpleList.map((restaurant) => restaurant.id);
+    // console.log('rest', restaurantIdList);
+    const restaurantList = await this.getRestaurantDtos(restaurantIdList);
+
     let images = await this.imagesService.getAllImages();
     const imgUrls = images.map((image) => new ImagesDto(image));
 
-    return new PostRestaurantsResponseDto(restaurantList, imgUrls);
+    return new GetRestaurantsResponseDto(restaurantList, imgUrls, count, maxPage);
   }
 
   async getRestaurantInfoById(restaurantId: string) {
@@ -69,15 +110,19 @@ export class RestaurantsService {
   }
 
   async saveRestaurantData(payload: any, data: any[]) {
-    await this.redisService.setList(payload.roomId, data);
+    await this.redisService.setList(payload, data);
   }
 
-  async getRestaurantData(payload: any): Promise<any[]> {
-    return await this.redisService.getList(payload.roomId);
+  async getRestaurantSimpleList(payload: any): Promise<any[]> {
+    return await this.redisService.getList(payload);
+  }
+
+  async getRestaurantSimpleListByRange(payload: any, start: number, end: number): Promise<any[]> {
+    return await this.redisService.getListByRange(payload, start, end);
   }
 
   async setCoordinates(payload: any, data: any) {
-    const key = payload.roomId + '_coord';
-    await this.redisService.setValue(key, data);
+    const key = payload + '_coord';
+    await this.redisService.setList(key, data);
   }
 }

@@ -7,7 +7,7 @@ export class RestaurantSimpleDto {
 
   moodKeywords: string[];
 
-  foodCategory: string | string[];
+  food_category: string | string[];
 
   foodCategories: string;
 
@@ -16,7 +16,7 @@ export class RestaurantSimpleDto {
   constructor(data: RestaurantDto) {
     this.id = data.id;
     this.moodKeywords = data.moodKeywords;
-    this.foodCategory = data.foodCategory;
+    this.food_category = data.foodCategory;
     this.foodCategories = data.foodCategories;
     this.menus = data.menus;
   }

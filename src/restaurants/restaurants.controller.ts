@@ -4,7 +4,7 @@ import { Response } from 'express';
 import { PostRestaurantsRequestDto } from './dto/post.restaurants.request.dto';
 import { GetUserId } from 'src/util/decorator/get-user.decorator';
 import { RestaurantsService } from './restaurants.service';
-import { PostRestaurantsResponseDto } from './dto/post.restaurants.response.dto';
+import { GetRestaurantsSimpleResponseDto } from './dto/get.restaurants.simple.response.dto';
 import { GetRestaurantsResponseDto } from './dto/get.restaurants.response.dto';
 
 @ApiTags('식당 API')
@@ -23,8 +23,8 @@ export class RestaurantsController {
     @GetUserId() userId,
     @Query() room: { roomId: string },
     @Body() requestDto: PostRestaurantsRequestDto,
-  ): Promise<PostRestaurantsResponseDto> {
-    return this.restaurantsService.getRestaurants(userId, room.roomId, requestDto.coordinates);
+  ): Promise<void> {
+    return this.restaurantsService.saveRestaurants(userId, room.roomId, requestDto.coordinates);
   }
 
   @Get('/simple')
@@ -33,7 +33,20 @@ export class RestaurantsController {
     description: '특정 방의 식당 리스트를 받을 수 있습니다.',
   })
   @ApiCreatedResponse({ description: '식당 리스트 조회 완료' })
-  async getRestaurants(@Query() room: { roomId: string }): Promise<GetRestaurantsResponseDto> {
-    return new GetRestaurantsResponseDto(room.roomId, await this.restaurantsService.getRestaurantData(room.roomId));
+  async getRestaurants(@Query() room: { roomId: string }): Promise<GetRestaurantsSimpleResponseDto> {
+    return new GetRestaurantsSimpleResponseDto(
+      room.roomId,
+      await this.restaurantsService.getRestaurantSimpleList(room.roomId),
+    );
+  }
+
+  @Get('')
+  @ApiOperation({
+    summary: 'Get all restaurant object list API',
+    description: '모든 식당 리스트를 받을 수 있습니다.',
+  })
+  @ApiCreatedResponse({ description: '식당 리스트 조회 완료' })
+  async getRestaurantList(@Query() room: { roomId: string; page: number }): Promise<GetRestaurantsResponseDto> {
+    return await this.restaurantsService.getRestaurantList(room.roomId, room.page);
   }
 }

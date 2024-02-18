@@ -2,14 +2,17 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { RestaurantDto } from './restaurant.dto';
 import { ImagesDto } from './images.dto';
-import { RestaurantSimpleDto } from './restaurant.simple.dto';
 
 export class GetRestaurantsResponseDto {
-  roomId: string;
-  restaurantSimpleDtoList: RestaurantSimpleDto[];
+  restaurantList: RestaurantDto[];
+  imgUrls: ImagesDto[];
+  totalCount: number;
+  maxPage: number;
 
-  constructor(roomId: string, restaurantSimpleDtoList: RestaurantSimpleDto[]) {
-    this.roomId = roomId;
-    this.restaurantSimpleDtoList = restaurantSimpleDtoList;
+  constructor(restaurantList: RestaurantDto[], imgUrls: ImagesDto[], totalCount, maxPage) {
+    this.restaurantList = restaurantList;
+    this.imgUrls = imgUrls;
+    this.totalCount = totalCount;
+    this.maxPage = maxPage;
   }
 }
