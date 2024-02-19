@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CatModule } from './cat/cat.module';
@@ -12,6 +12,8 @@ import { KeywordsModule } from './keywords/keywords.module';
 import { RestaurantsModule } from './restaurants/restaurants.module';
 import { FoodcategoriesModule } from './foodcategories/foodcategories.module';
 import { ImagesModule } from './images/images.module';
+import { Redis } from 'ioredis';
+import { RedisService } from './util/redis/redis.service';
 
 @Module({
   imports: [
@@ -28,11 +30,23 @@ import { ImagesModule } from './images/images.module';
     AuthModule,
     SocketModule,
     KeywordsModule,
-    RestaurantsModule,
+    forwardRef(() => RestaurantsModule),
     FoodcategoriesModule,
     ImagesModule,
   ],
   controllers: [AppController],
-  providers: [AppService, AuthService],
+  providers: [
+    AppService,
+    AuthService,
+    {
+      provide: 'REDIS_CLIENT',
+      useValue: new Redis({
+        host: process.env.REDIS_HOST,
+        port: parseInt(process.env.REDIS_PORT),
+      }),
+    },
+    RedisService,
+  ],
+  exports: [RedisService],
 })
 export class AppModule {}

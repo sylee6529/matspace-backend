@@ -12,11 +12,11 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { Socket, Server } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
 
 @WebSocketGateway()
-export class FoodcategoriesGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {
+export class RestaurantsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {
   private readonly baseUrl = this.configService.get<string>('FASTAPI_BACKEND_URL');
   private logger: Logger = new Logger('SocketGateway');
 
@@ -59,7 +59,6 @@ export class FoodcategoriesGateway implements OnGatewayInit, OnGatewayConnection
       }
 
       const userId = user._id.toString();
-      // this.socketService.addNewConnectedUser(socket.id, userId);
 
       console.log('user connected:', userId);
     } catch (error) {
@@ -74,49 +73,24 @@ export class FoodcategoriesGateway implements OnGatewayInit, OnGatewayConnection
     socket.disconnect(true);
   }
 
-  @SubscribeMessage('send-speech-foodCategory')
-  async handleMessage(@ConnectedSocket() socket: any, @MessageBody() data: any) {
-    console.log('send-speech-foodCategory', data);
+  @SubscribeMessage('select-restaurant')
+  async selectRestaurant(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
+    console.log('select-restaurant', data.roomId);
     const roomId = data.roomId;
-    const speechSentence = data.speechSentence;
-
-    const token = socket.handshake.auth?.token;
-    const payload = await this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
-    const user = await this.authService.validate(payload.sub);
-    const userId = user._id.toString();
-    if (!user) {
-      console.log('user not found');
-      return;
-    }
+    const selectedRestaurant = data.selectedRestaurant;
 
     const room = this.server.in(roomId);
-    this.httpService
-      .post(`${this.baseUrl}/foodcategories/speech`, {
-        userId: userId,
-        sentence: speechSentence,
-      })
-      .subscribe((response) => {
-        // console.log('응답 옴', response.data);
-        room.emit('receive-speech-foodCategory', { userId: userId, foodCategories: response.data.words });
-      });
+    room.emit('select-restaurant', selectedRestaurant);
   }
 
-  @SubscribeMessage('select-foodCategories')
-  async handleSelectFoodCategories(@ConnectedSocket() socket: any, @MessageBody() data: any) {
-    console.log('select-foodCategories', data);
+  @SubscribeMessage('like-restaurant')
+  async likeRestaurant(@MessageBody() data: any, @ConnectedSocket() socket: Socket) {
+    console.log('like-restaurant', data);
     const roomId = data.roomId;
-    const resultList = data.resultList;
-
-    const token = socket.handshake.auth?.token;
-    const payload = await this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
-    const user = await this.authService.validate(payload.sub);
-    const userId = user._id.toString();
-    if (!user) {
-      console.log('user not found');
-      return;
-    }
+    const restId = data.restId;
+    const likes = data.likes;
 
     const room = this.server.in(roomId);
-    room.emit('select-foodCategories', resultList);
+    room.emit('like-updated', { restId, likes });
   }
 }

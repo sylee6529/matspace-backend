@@ -33,6 +33,8 @@ export class RestaurantDto {
   @Expose({ name: 'food_category' })
   foodCategory: string | string[];
 
+  foodCategories: string;
+
   constructor(restaurantId: string, data: any) {
     this.id = restaurantId;
     this.name = data.name;
@@ -48,5 +50,6 @@ export class RestaurantDto {
     this.images = data.images;
     this.ratingCount = data.ratingCount;
     this.foodCategory = data.food_category;
+    this.foodCategories = data.foodCategories;
   }
 }
