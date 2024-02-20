@@ -9,15 +9,26 @@ export class RestaurantSimpleDto {
 
   food_category: string | string[];
 
-  foodCategories: string;
+  foodCategories: string | string[];
 
   menus: string[];
 
-  constructor(data: RestaurantDto) {
-    this.id = data.id;
-    this.moodKeywords = data.moodKeywords;
-    this.food_category = data.foodCategory;
-    this.foodCategories = data.foodCategories;
-    this.menus = data.menus;
+  coodX: number;
+
+  coodY: number;
+
+  constructor(restaurantDto: RestaurantDto) {
+    this.id = restaurantDto._id;
+    this.moodKeywords = restaurantDto.moodKeywords;
+    this.food_category = restaurantDto.foodCategory;
+    this.foodCategories = restaurantDto.foodCategories;
+    this.menus = restaurantDto.menus;
+    this.coodX = 0;
+    this.coodY = 0;
+  }
+
+  setCoordinates(coodX: number, coodY: number) {
+    this.coodX = coodX;
+    this.coodY = coodY;
   }
 }

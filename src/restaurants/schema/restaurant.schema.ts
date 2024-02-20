@@ -42,7 +42,7 @@ export class Restaurant {
   food_category: string;
 
   @Prop()
-  foodCategories: string;
+  foodCategories: string[];
 }
 
 export const RestaurantSchema = SchemaFactory.createForClass(Restaurant);

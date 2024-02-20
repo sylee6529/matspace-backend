@@ -3,7 +3,7 @@ import { Expose, Transform } from 'class-transformer';
 
 export class RestaurantDto {
   @Expose({ name: '_id' })
-  id: string;
+  _id: string;
 
   name: string;
 
@@ -33,10 +33,16 @@ export class RestaurantDto {
   @Expose({ name: 'food_category' })
   foodCategory: string | string[];
 
-  foodCategories: string;
+  foodCategories: string | string[];
+
+  coordX: number;
+
+  coordY: number;
+
+  likes: number;
 
   constructor(restaurantId: string, data: any) {
-    this.id = restaurantId;
+    this._id = restaurantId;
     this.name = data.name;
     this.rating = data.rating;
     this.address = data.address;
@@ -51,5 +57,11 @@ export class RestaurantDto {
     this.ratingCount = data.ratingCount;
     this.foodCategory = data.food_category;
     this.foodCategories = data.foodCategories;
+    this.likes = 0;
+  }
+
+  setCoordinates(coodX: number, coodY: number) {
+    this.coordX = coodX;
+    this.coordY = coodY;
   }
 }
