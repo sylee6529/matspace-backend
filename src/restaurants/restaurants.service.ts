@@ -31,13 +31,10 @@ export class RestaurantsService {
     let restaurantList = [];
     for (const restaurant of restaurantIInfos) {
       const restaurantDetail = await this.getRestaurantInfoById(restaurant.id);
-      if (restaurantDetail === undefined || restaurantDetail == null) continue;
-
       const restaurantDto = new RestaurantDto(restaurant.id, restaurantDetail);
       restaurantDto.setCoordinates(restaurant.coodX, restaurant.coodY);
       restaurantList.push(restaurantDto);
     }
-    // console.log('restaurantList', restaurantList);
     return restaurantList;
   }
 
@@ -56,9 +53,7 @@ export class RestaurantsService {
     const response = await lastValueFrom(withinonekResponse);
 
     let restaurantSimpleList = [];
-
     const restaurantLength = response.data.num_res_within_onek;
-    console.log('restaurantLength', restaurantLength);
 
     let closestPair = this.findClosestRatio(restaurantLength);
     let w_div = closestPair[0];
@@ -117,10 +112,9 @@ export class RestaurantsService {
         // 끝 인덱스가 데이터 개수보다 큰 경우, 시작 인덱스부터 마지막 데이터까지만 가져옴
         end = -1;
       }
-      // console.log('start', start, 'end', end);
+
       restaurantSimpleList = await this.getRestaurantSimpleListByRange(roomId, start, end);
     }
-    // console.log('restaurantSimpleList', restaurantSimpleList);
 
     let restaurantInfoList = restaurantSimpleList.map((obj) => {
       return {
@@ -129,7 +123,7 @@ export class RestaurantsService {
         coodY: obj.coodY,
       };
     });
-    // console.log('rest', restaurantInfoList);
+
     const restaurantList = await this.getRestaurantDtos(restaurantInfoList);
 
     let images = await this.imagesService.getAllImages();
