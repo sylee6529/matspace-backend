@@ -5,7 +5,7 @@ import { RestaurantDto } from './restaurant.dto';
 export class RestaurantSimpleDto {
   id: string;
 
-  moodKeywords: string[];
+  newMoods: string[];
 
   food_category: string | string[];
 
@@ -13,22 +13,22 @@ export class RestaurantSimpleDto {
 
   menus: string[];
 
-  coodX: number;
+  coordX: number;
 
-  coodY: number;
+  coordY: number;
 
   constructor(restaurantDto: RestaurantDto) {
     this.id = restaurantDto._id;
-    this.moodKeywords = restaurantDto.moodKeywords;
+    this.newMoods = restaurantDto.newMoods;
     this.food_category = restaurantDto.foodCategory;
     this.foodCategories = restaurantDto.foodCategories;
     this.menus = restaurantDto.menus;
-    this.coodX = 0;
-    this.coodY = 0;
+    this.coordX = 0;
+    this.coordY = 0;
   }
 
-  setCoordinates(coodX: number, coodY: number) {
-    this.coodX = coodX;
-    this.coodY = coodY;
+  setCoordinates(coordX: number, coordY: number) {
+    this.coordX = coordX;
+    this.coordY = coordY;
   }
 }

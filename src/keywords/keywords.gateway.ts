@@ -128,7 +128,7 @@ export class KeywordsGateway implements OnGatewayInit, OnGatewayConnection, OnGa
           .post(`${this.baseUrl}/restaurants/forone`, {
             userId: userId,
             roomId: roomId,
-            moodKeywords: uniqueMoods,
+            newMoods: uniqueMoods,
             categories: selectedFoodCategories,
           })
           .pipe(

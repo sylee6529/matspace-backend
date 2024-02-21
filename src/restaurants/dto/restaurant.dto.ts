@@ -15,12 +15,11 @@ export class RestaurantDto {
 
   thumbnailImg: string;
 
-  @Expose({ name: 'phone_number' })
   phoneNumber: string;
 
   options: string;
 
-  moodKeywords: string[];
+  newMoods: string[];
 
   isDelivery: boolean | null;
 
@@ -30,7 +29,6 @@ export class RestaurantDto {
 
   ratingCount: string;
 
-  @Expose({ name: 'food_category' })
   foodCategory: string | string[];
 
   foodCategories: string | string[];
@@ -41,6 +39,8 @@ export class RestaurantDto {
 
   likes: number;
 
+  reviews: string[];
+
   constructor(restaurantId: string, data: any) {
     this._id = restaurantId;
     this.name = data.name;
@@ -50,7 +50,7 @@ export class RestaurantDto {
     this.thumbnailImg = data.thumbnailImg;
     this.phoneNumber = data.phone_number;
     this.options = data.options;
-    this.moodKeywords = data.moodKeywords;
+    this.newMoods = data.newMoods;
     this.isDelivery = data.isDelivery;
     this.isTakeOut = data.isTakeOut;
     this.images = data.images;
@@ -58,10 +58,11 @@ export class RestaurantDto {
     this.foodCategory = data.food_category;
     this.foodCategories = data.foodCategories;
     this.likes = 0;
+    this.reviews = data.reviews;
   }
 
-  setCoordinates(coodX: number, coodY: number) {
-    this.coordX = coodX;
-    this.coordY = coodY;
+  setCoordinates(coordX: number, coordY: number) {
+    this.coordX = coordX;
+    this.coordY = coordY;
   }
 }
