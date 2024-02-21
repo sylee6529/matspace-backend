@@ -27,17 +27,6 @@ export class RestaurantsService {
     private readonly redisService: RedisService,
   ) {}
 
-  async getRestaurantDtos(restaurantIInfos: any[]) {
-    let restaurantList = [];
-    for (const restaurant of restaurantIInfos) {
-      const restaurantDetail = await this.getRestaurantInfoById(restaurant.id);
-      const restaurantDto = new RestaurantDto(restaurant.id, restaurantDetail);
-      restaurantDto.setCoordinates(restaurant.coodX, restaurant.coodY);
-      restaurantList.push(restaurantDto);
-    }
-    return restaurantList;
-  }
-
   async saveRestaurants(userId: string, roomId: string, coordinates: number[]) {
     const withinonekResponse = this.httpService
       .post(`${this.baseUrl}/restaurants/withinonek`, {
@@ -52,45 +41,58 @@ export class RestaurantsService {
       );
     const response = await lastValueFrom(withinonekResponse);
 
-    let restaurantSimpleList = [];
     const restaurantLength = response.data.num_res_within_onek;
+    const starCount = Math.min(restaurantLength, 300);
 
-    let closestPair = this.findClosestRatio(restaurantLength);
-    let w_div = closestPair[0];
-    let h_div = closestPair[1];
+    console.log('starCount', starCount);
+    let width = Math.round(Math.sqrt(starCount));
+    let height = Math.round(Math.sqrt(starCount));
+    // let w_step = (90 - 5) / w_div;
+    // let h_step = (90 - 5) / h_div;
 
-    let w_step = (90 - 5) / w_div;
-    let h_step = (90 - 5) / h_div;
+    // console.log('w_div', width, 'h_div', height);
 
     let restaurantCount = 0;
+    let restaurantList: (string | RestaurantSimpleDto)[] = [];
+
     for (const restaurantId of response.data.restaurant_id_list) {
-      const restaurantInfo = await this.getRestaurantInfoById(restaurantId);
-      if (
-        restaurantInfo.food_category === undefined ||
-        restaurantInfo.foodCategories === undefined ||
-        restaurantInfo.moodKeywords === undefined ||
-        restaurantInfo.moodKeywords.length === 0
-      )
-        continue;
+      if (restaurantCount <= 300) {
+        const restaurantInfo = await this.getRestaurantInfoById(restaurantId);
+        if (restaurantInfo.food_category === undefined || restaurantInfo.foodCategories === undefined) continue;
 
-      const restaurantDto = new RestaurantDto(restaurantId, restaurantInfo);
-      const restaurantSimpleDto = new RestaurantSimpleDto(restaurantDto);
-      // 각 칸에서 랜덤한 좌표 생성
-      let w = Math.random() * w_step + Math.floor(restaurantCount % w_div) * w_step + 5;
-      let h = Math.random() * h_step + Math.floor(restaurantCount / w_div) * h_step + 5;
+        const restaurantDto = new RestaurantDto(restaurantId, restaurantInfo);
+        const restaurantSimpleDto = new RestaurantSimpleDto(restaurantDto);
 
-      // console.log('w', w, 'h', h);
-      restaurantSimpleDto.setCoordinates(w, h);
-      restaurantSimpleList.push(restaurantSimpleDto);
+        const w = getRandomInt(5, 95);
+        const h = getRandomInt(5, 95);
+
+        // console.log('w', w, 'h', h);
+        restaurantSimpleDto.setCoordinates(w, h);
+        restaurantList.push(restaurantSimpleDto);
+      } else {
+        restaurantList.push(restaurantId);
+      }
+
       restaurantCount++;
     }
 
     console.log('length and count', restaurantLength, restaurantCount);
 
-    await this.setCoordinates(roomId, coordinates);
-    await this.saveRestaurantData(roomId, restaurantSimpleList).then(async () => {
+    await this.setLocationCoordinates(roomId, coordinates);
+    await this.saveRestaurantData(roomId, restaurantList).then(async () => {
       console.log('저장 완료');
     });
+  }
+
+  async getRestaurantDtos(restaurantIInfos: any[]) {
+    let restaurantList = [];
+    for (const restaurant of restaurantIInfos) {
+      const restaurantDetail = await this.getRestaurantInfoById(restaurant.id);
+      const restaurantDto = new RestaurantDto(restaurant.id, restaurantDetail);
+      restaurantDto.setCoordinates(restaurant.coordX, restaurant.coordY);
+      restaurantList.push(restaurantDto);
+    }
+    return restaurantList;
   }
 
   async getRestaurantList(roomId: string, page: number) {
@@ -116,13 +118,13 @@ export class RestaurantsService {
       restaurantSimpleList = await this.getRestaurantSimpleListByRange(roomId, start, end);
     }
 
-    let restaurantInfoList = restaurantSimpleList.map((obj) => {
-      return {
-        id: obj.id,
-        coodX: obj.coodX,
-        coodY: obj.coodY,
-      };
-    });
+    const restaurantInfoList = restaurantSimpleList
+      .filter((item) => item.coordX !== undefined && item.coordY !== undefined)
+      .map((item) => ({
+        id: item.id,
+        coordX: item.coordX,
+        coordY: item.coordY,
+      }));
 
     const restaurantList = await this.getRestaurantDtos(restaurantInfoList);
 
@@ -149,20 +151,12 @@ export class RestaurantsService {
     return await this.redisService.getListByRange(payload, start, end);
   }
 
-  async setCoordinates(payload: any, data: any) {
+  async setLocationCoordinates(payload: any, data: any) {
     const key = payload + '_coord';
     await this.redisService.setList(key, data);
   }
+}
 
-  findClosestRatio(n) {
-    let lower = Math.floor(Math.sqrt(n));
-    let upper = Math.ceil(n / lower);
-
-    while (lower / upper > 2 / 3) {
-      lower--;
-      upper = Math.ceil(n / lower);
-    }
-
-    return [lower, upper];
-  }
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min)) + min;
 }
