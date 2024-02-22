@@ -103,8 +103,8 @@ export class FoodcategoriesGateway implements OnGatewayInit, OnGatewayConnection
         }),
       )
       .subscribe((response) => {
-        // console.log('응답 옴', response.data);
-        socket.emit('receive-speech-foodCategory', { userId: userId, foodCategories: response.data.words });
+        console.log('응답 옴', response.data);
+        room.emit('receive-speech-foodCategory', { userId: userId, foodCategories: response.data.words });
       });
   }
 
