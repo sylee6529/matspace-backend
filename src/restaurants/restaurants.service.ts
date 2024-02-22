@@ -64,7 +64,7 @@ export class RestaurantsService {
         const restaurantDto = new RestaurantDto(restaurantId, restaurantInfo);
         const restaurantSimpleDto = new RestaurantSimpleDto(restaurantDto);
 
-        const w = getRandomInt(5, 95);
+        const w = getRandomInt(5, 90);
         const h = getRandomInt(5, 85);
 
         // console.log('w', w, 'h', h);
