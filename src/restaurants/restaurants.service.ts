@@ -45,8 +45,9 @@ export class RestaurantsService {
     const starCount = Math.min(restaurantLength, 300);
 
     console.log('starCount', starCount);
-    let width = Math.round(Math.sqrt(starCount));
-    let height = Math.round(Math.sqrt(starCount));
+    let closestPair = this.findClosestRatio(starCount);
+    let width = Math.round(Math.sqrt(restaurantLength));
+    let height = Math.round(Math.sqrt(restaurantLength));
     // let w_step = (90 - 5) / w_div;
     // let h_step = (90 - 5) / h_div;
 
@@ -64,7 +65,7 @@ export class RestaurantsService {
         const restaurantSimpleDto = new RestaurantSimpleDto(restaurantDto);
 
         const w = getRandomInt(5, 95);
-        const h = getRandomInt(5, 95);
+        const h = getRandomInt(5, 85);
 
         // console.log('w', w, 'h', h);
         restaurantSimpleDto.setCoordinates(w, h);
@@ -144,7 +145,16 @@ export class RestaurantsService {
   }
 
   async getRestaurantSimpleList(payload: any): Promise<any[]> {
-    return await this.redisService.getList(payload);
+    const restaurantSimpleList = await this.redisService.getList(payload);
+    const restaurantSList = restaurantSimpleList
+      .filter((item) => item.coordX !== undefined && item.coordY !== undefined)
+      .map((item) => ({
+        id: item.id,
+        coordX: item.coordX,
+        coordY: item.coordY,
+      }));
+
+    return restaurantSList;
   }
 
   async getRestaurantSimpleListByRange(payload: any, start: number, end: number): Promise<any[]> {
@@ -154,6 +164,18 @@ export class RestaurantsService {
   async setLocationCoordinates(payload: any, data: any) {
     const key = payload + '_coord';
     await this.redisService.setList(key, data);
+  }
+
+  findClosestRatio(n) {
+    let lower = Math.floor(Math.sqrt(n));
+    let upper = Math.ceil(n / lower);
+
+    while (lower / upper > 2 / 3) {
+      lower--;
+      upper = Math.ceil(n / lower);
+    }
+
+    return [lower, upper];
   }
 }
 
