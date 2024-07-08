@@ -43,7 +43,7 @@
 - 데이터를 정제한 결과 1만 8천 식당을 대상으로 식당에 해당하는 '키워드'를 벡터화
 - 유저의 니즈에 따른 식당 추천
 
-![f1](https://github.com/Moojuck-KJ3/Front_end_ver2/assets/43630972/4fc3dc59-807b-45f3-848f-aa3da0483d1f)
+<img src="https://github.com/Moojuck-KJ3/Front_end_ver2/assets/43630972/4fc3dc59-807b-45f3-848f-aa3da0483d1f" alt="이미지 설명" width="800">
 
 ### 식당 조합
 
@@ -51,7 +51,7 @@
 - 유클리드 거리 계산을 통해 식당 간의 유사도 측정
 - K-NN 알고리즘을 통한 인접한 식당 탐색
 
-![f2](https://github.com/Moojuck-KJ3/Front_end_ver2/assets/43630972/0563c65c-cd66-4803-aba1-1e45d7dd5a52)
+<img src="https://github.com/Moojuck-KJ3/Front_end_ver2/assets/43630972/0563c65c-cd66-4803-aba1-1e45d7dd5a52" alt="이미지 설명" width="800">
 
 ### 연관 키워드 추천
 
@@ -59,14 +59,15 @@
 - 수집한 문장으로 벡터 모델 학습
 - `Word2Vec`를 활용하여 위 모델을 통해 연관 단어 맵핑
 
-![f3](https://github.com/Moojuck-KJ3/Front_end_ver2/assets/43630972/21e5aee1-3fbb-4ba4-85bf-e1387fd1cbe3)
+<img src="https://github.com/Moojuck-KJ3/Front_end_ver2/assets/43630972/21e5aee1-3fbb-4ba4-85bf-e1387fd1cbe3" alt="이미지 설명" width="800">
 
 ### 실시간 유저소통
 
 - Mesh방식 `WebRTC` 구현하여 4명 간 화상 통화
 - `Socket.IO`를 활용한 실시간 선택 공유
 
-![f4](https://github.com/Moojuck-KJ3/Front_end_ver2/assets/43630972/111bfbbb-d7ec-4389-a6e7-cf47b927abbf)
+<img src="https://github.com/Moojuck-KJ3/Front_end_ver2/assets/43630972/111bfbbb-d7ec-4389-a6e7-cf47b927abbf" alt="이미지 설명" width="800">
+
 
 ## 🎯결과물<a name = "result"></a>
 
@@ -78,40 +79,54 @@
 ### **벡터화 모델 직접 학습으로 키워드 연관도 개선**
 
 - **문제** : 기존에 존재하는 모델인 **FastText**를 사용했을 때,
-  키워드의 **연관성**이 높지 않고, 그 **유사도**가 기대하던 수준에 미치지 못함 - **우리에게 필요한 데이터**만 **정밀도를 높일** 수 있다면 좋을텐데… - **맛집 추천 데이터**로 학습시키면 결과가 나아지지 않을까?
-- **해결** : 데이터 수집 후 **Word2Vec** 를 활용하여 자체 모델 학습으로 **연관도 개선**
+  키워드의 **연관성**이 높지 않고, 그 **유사도**가 기대하던 수준에 미치지 못함
+- **해결** : 식당 리뷰 데이터 수집 후 **Word2Vec** 를 활용하여 자체 모델 학습으로 연관도 개선
 
-![c1](https://github.com/Moojuck-KJ3/Front_end_ver2/assets/43630972/d3e1d2b4-9253-4cde-b928-c7bcf581392d)
+<img src="https://github.com/Moojuck-KJ3/Front_end_ver2/assets/43630972/d3e1d2b4-9253-4cde-b928-c7bcf581392d" alt="이미지 설명" width="800">
 
-### **알고리즘을 통한 식당 조합 기능 구현**
+
+### **1. 알고리즘을 통한 식당 조합 기능 구현**
 
 ⚠️**문제1** : 식당과 식당을 조합하는 기능을 구현할 때,
-  **유사도가 먼 경우** 조합 결과가 나오지 않는 현상을 경험 - **벡터화**된 **식당**들을 **공간** 상에 존재한다 여긴다면
-  **기하학**과 관련된 알고리즘을 사용할 수 있지 않을까?
+ *유사도가 먼 경우 조합 결과가 나오지 않는 현상을 경험 - 벡터화된 식당들을 공간 상에 존재한다 여긴다면
+  기하학과 관련된 알고리즘을 사용할 수 있지 않을까?
   
-✔️**해결1**: 각각의 식당벡터의 **중간 지점**을
+✔️**해결1**: 각각의 식당벡터의 중간 지점을
   **유클리드 거리**를 통해 구할 수 있었다
   
-⚠️**문제2** : 그러나 해당 지점과 일치하는 **식당 벡터가 있다는
-  보장이 없다** 생각하였기에 추가적인 알고리즘이 필요하였다 - 이 지점과 가능한 **가까운 실제 식당**을 구하면 될 것 같은데??
+⚠️**문제2** : 그러나 해당 지점과 일치하는 식당 벡터가 있다는
+  보장이 없다 생각하였기에 추가적인 알고리즘이 필요하였다 - 이 지점과 가능한 가까운 실제 식당을 구하면 될 것 같은데??
   
 ✔️**해결2: K-최근접 이웃 (K-Nearest Neighbors, KNN)** 을 통해 해당하는 중간 지점과
-  **가까운 식당**을 찾아 추천할 수 있게 되었다
+  가까운 식당을 찾아 추천할 수 있게 되었다
 
-![c2](https://github.com/Moojuck-KJ3/Front_end_ver2/assets/43630972/777b7ac1-b0ef-403a-8193-aeae440f4be3)
+<img src="https://github.com/Moojuck-KJ3/Front_end_ver2/assets/43630972/777b7ac1-b0ef-403a-8193-aeae440f4be3" alt="이미지 설명" width="800">
 
-### **Buffer 활용을 통한 소켓 요청과 API Throttling - 응답 안정화**
+
+### **2. Buffer 활용을 통한 소켓 요청과 API Throttling - 응답 안정화**
 
 ⚠️**문제** : 음성 인식을 통한 키워드 분석을 위해 ‘대량’의 소켓 요청을 보낸 결과,
   **간헐적으로 서버 다운 or 서버 부하 증가** - 매 요청마다 데이터를 전송하는 것이 아니라,
-  **일정 주기로 모았다 보내준다**면 이러한 현상을 개선할 수 있지 않을까 고려 - **Buffer**라는 개념을 소켓 요청에 응용하여,
+  일정 주기로 모았다 보내준다면 이러한 현상을 개선할 수 있지 않을까 고려 - Buffer 개념을 소켓 요청에 응용하여,
   많은 양의 데이터를 하나의 소켓에 모아 보낸다면 가능할 것이라 생각 - 조사를 해보니 다양한 이벤트 처리 방식 중,
-  **Debouncing**과 **Throttling**이 데이터를 모아 보내는 것에 적합하다 판단
+  Debouncing과 Throttling이 데이터를 모아 보내는 것에 적합하다 판단
 
-✔️해결: 일정 시간마다 반응**을 보여주어야 **UX**에 더 좋은 결과를 얻을 수 있다고 여겨
-  Frontend에서는 **Throttling** 방식을 채택하여 **버퍼 구현** 및 **응답 안정화**, Backend에서는 Throttler 패키지의 기능을 활용하여 Rate Limiting을 걸어 API 요청 초과 방지
+✔️해결: 일정 시간마다 반응**을 보여주어야 UX에 더 좋은 결과를 얻을 수 있다고 여겨
+  Frontend에서는 Throttling 방식을 채택하여 버퍼 구현 및 응답 안정화, Backend에서는 Throttler 패키지의 기능을 활용하여 Rate Limiting을 걸어 API 요청 초과 방지
 
-![c3](https://github.com/Moojuck-KJ3/Front_end_ver2/assets/43630972/648e8c37-da13-48f2-a1c0-657469f042fb)
+<img src="https://github.com/Moojuck-KJ3/Front_end_ver2/assets/43630972/648e8c37-da13-48f2-a1c0-657469f042fb" alt="이미지 설명" width="800">
+
+<!--
+### **3. **
+
+![image](https://github.com/sylee6529/matspace-backend/assets/68765200/c4b17bd8-81ab-49f5-a1da-9ed3e7ef723e)
+
+
+<img src="https://github.com/sylee6529/matspace-backend/assets/68765200/f8f4d9f9-1650-4c2a-a693-c08fc284552b" alt="이미지 설명" width="800">
+⚠️ Before: '시작하기'를 누르면 
+
+✔️
+-->
 
 ## 🗼기술스택<a name = "techStack"></a>
 
